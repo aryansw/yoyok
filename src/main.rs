@@ -1,9 +1,13 @@
 #![allow(unused)]
+// Cool features
+#![feature(let_chains)]
+
 use crate::error::Error;
 use anyhow::Context;
 use clap::Parser;
 use parser::parser::parse;
 
+// Modules
 mod error;
 mod parser;
 
