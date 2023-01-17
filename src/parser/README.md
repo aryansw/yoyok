@@ -2,13 +2,15 @@
 
 ## My little homemade recursive descent parser.
 
+## Grammar
+
 ```bnf
-<op> ::= ['+' | '-' | '*' | '/']
+<op>   ::= ['+' | '-' | '*' | '/']
 <expr> ::= <expr> [ <op> <expr> ]*
          | <num>
          | <ident>
-<simp> ::= let <ident> '=' <expr> 
-         | var <ident> '=' <expr>
+<simp> ::= let <ident> '=' <expr>
+          | var <ident> '=' <expr>
 <prgm> ::= [<simp> ';']* <expr>
 ```
 

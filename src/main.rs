@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crate::error::Error;
 use anyhow::Context;
 use clap::Parser;
