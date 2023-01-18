@@ -58,7 +58,7 @@ impl<'a> Scanner<'a> {
 
     fn next_word(&mut self) -> Parse<String> {
         let mut word = String::new();
-        while let Some(c) = self.peek_char() && c.is_alphanumeric() {
+        while let Some(c) = self.peek_char() && (c.is_alphanumeric() || c == '_') {
             word.push(c);
             self.next_char();
         }
