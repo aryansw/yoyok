@@ -5,14 +5,13 @@
 ## Grammar
 
 ```bnf
-<op>   ::= ['+' | '-' | '*' | '/']
+<op>   ::= ['+' | '-' | '*' | '/']+
 <expr> ::= <expr> [ <op> <expr> ]*
          | <num>
          | <ident>
-         | <expr> '=' <expr>
-<simp> ::= let <ident> '=' <expr>
-          | var <ident> '=' <expr>
-<prgm> ::= [<simp> ';']* <expr>
+<stmt> ::= let <ident> '=' <expr>
+         | var <ident> '=' <expr>
+<prgm> ::= [<stmt> ';']* <expr>
 ```
 
 ## Examples
@@ -22,3 +21,7 @@ let x = 5 + 45;
 let y = 45 + x - 20;
 y
 ```
+
+## Helpful Resources
+
+- http://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/grammar.html

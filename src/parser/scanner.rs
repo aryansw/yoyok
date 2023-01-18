@@ -1,7 +1,7 @@
 use anyhow::Context;
 
 use super::{
-    constants::{is_delim, is_keyword, is_operator, DELIMS},
+    constants::{is_comment, is_delim, is_keyword, is_operator},
     error::{Error, Parse},
     tokens::{
         Token,
@@ -59,7 +59,12 @@ impl<'a> Scanner<'a> {
                 self.next_char();
                 Ok(Delim(c))
             }
-            _ => Ok(EOF),
+            Some(x) if is_comment(x) => {
+                self.consume_line();
+                self.next_tok().map(|tok| tok.token)
+            }
+            Some(x) => Err(Error::UnrecognizedToken(x)),
+            None => Ok(EOF),
         }
         .map(|tok| tok.with_pos(pos))
     }
@@ -106,6 +111,12 @@ impl<'a> Scanner<'a> {
             None
         } else {
             self.src[self.pos..].chars().next()
+        }
+    }
+
+    fn consume_line(&mut self) {
+        while self.pos < self.src.len() && !self.src[self.pos..].starts_with('\n') {
+            self.pos += 1;
         }
     }
 

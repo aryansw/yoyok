@@ -1,0 +1,6 @@
+let x = 30 * 45;
+var y = 322 + 22;
+
+# this text should be ignored
+
+34 + 34

@@ -1,7 +1,12 @@
 /// Constants used by the parser
-pub const DELIMS: [char; 1] = [';'];
-pub const KEYWORDS: [&str; 2] = ["let", "var"];
-pub const OPERATORS: [char; 5] = ['+', '-', '*', '/', '='];
+const DELIMS: [char; 1] = [';'];
+const KEYWORDS: [&str; 2] = ["let", "var"];
+const OPERATORS: [char; 5] = ['+', '-', '*', '/', '='];
+const COMMENT: char = '#';
+
+pub fn is_comment(c: char) -> bool {
+    c == COMMENT
+}
 
 pub fn is_operator(c: char) -> bool {
     OPERATORS.contains(&c)
