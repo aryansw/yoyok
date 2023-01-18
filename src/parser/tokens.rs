@@ -1,9 +1,10 @@
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token: TokenType,
     pos: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
     Number(i64),
     Ident(String),
@@ -12,7 +13,7 @@ pub enum TokenType {
     EOF,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Keyword {
     Let,
     Var,

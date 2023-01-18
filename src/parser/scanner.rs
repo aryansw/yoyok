@@ -12,22 +12,38 @@ use super::{
 pub struct Scanner<'a> {
     src: &'a str,
     pos: usize,
+    next: Option<Token>,
 }
 
 impl<'a> Scanner<'a> {
     pub fn new(src: &'a str) -> Self {
-        Self { src, pos: 0 }
+        Self {
+            src,
+            pos: 0,
+            next: None,
+        }
+    }
+
+    pub fn peek(&mut self) -> Parse<Token> {
+        if self.next.is_none() {
+            self.next = Some(self.next()?);
+        }
+        Ok(self.next.clone().unwrap())
     }
 
     pub fn next(&mut self) -> Parse<Token> {
-        // Save current position
-        let pos = self.pos;
-        Ok(self.next_tok()?.with_pos(pos))
+        if let Some(tok) = self.next.take() {
+            return Ok(tok);
+        } else {
+            Ok(self.next_tok()?)
+        }
     }
 
-    fn next_tok(&mut self) -> Parse<TokenType> {
+    fn next_tok(&mut self) -> Parse<Token> {
         // Consume whitespace
         self.consume_whitespace();
+        // Save current position
+        let pos = self.pos;
         match self.peek_char() {
             Some(c) if c.is_numeric() => Ok(Number(self.next_num()?)),
             Some(c) if c.is_alphabetic() => {
@@ -45,6 +61,7 @@ impl<'a> Scanner<'a> {
             }
             _ => Ok(EOF),
         }
+        .map(|tok| tok.with_pos(pos))
     }
 
     fn next_op(&mut self) -> Parse<String> {
@@ -96,5 +113,28 @@ impl<'a> Scanner<'a> {
         while self.pos < self.src.len() && self.src[self.pos..].starts_with(char::is_whitespace) {
             self.pos += 1;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::assert_matches::assert_matches;
+
+    use crate::parser::scanner::TokenType::*;
+    use crate::parser::{error::Error, tokens::Keyword::*};
+
+    use super::Scanner;
+
+    #[test]
+    fn test_scanner() -> Result<(), Error> {
+        let mut scan = Scanner::new("let x = 5;");
+        assert_eq!(scan.next()?.token, Keyword(Let));
+        assert_eq!(scan.next()?.token, Ident("x".into()));
+        assert_eq!(scan.next()?.token, Ident("=".into()));
+        assert_eq!(scan.next()?.token, Number(5));
+        assert_eq!(scan.next()?.token, Delim(';'));
+        assert_eq!(scan.next()?.token, EOF);
+        assert_eq!(scan.next()?.token, EOF);
+        Ok(())
     }
 }

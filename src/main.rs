@@ -1,6 +1,7 @@
 #![allow(unused)]
 // Cool features
 #![feature(let_chains)]
+#![feature(assert_matches)]
 
 use crate::error::Error;
 use anyhow::Context;

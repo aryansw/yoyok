@@ -9,6 +9,7 @@
 <expr> ::= <expr> [ <op> <expr> ]*
          | <num>
          | <ident>
+         | <expr> '=' <expr>
 <simp> ::= let <ident> '=' <expr>
           | var <ident> '=' <expr>
 <prgm> ::= [<simp> ';']* <expr>

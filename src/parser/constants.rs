@@ -1,5 +1,4 @@
 /// Constants used by the parser
-
 pub const DELIMS: [char; 1] = [';'];
 pub const KEYWORDS: [&str; 2] = ["let", "var"];
 pub const OPERATORS: [char; 5] = ['+', '-', '*', '/', '='];
