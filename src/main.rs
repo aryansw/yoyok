@@ -10,6 +10,7 @@ use parser::parser::parse;
 
 // Modules
 mod error;
+mod ast;
 mod parser;
 
 /// Simple program to greet a person

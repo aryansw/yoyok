@@ -6,12 +6,13 @@
 
 ```bnf
 <op>   ::= ['+' | '-' | '*' | '/']+
-<expr> ::= <expr> [ <op> <expr> ]*
+<expr> ::= <expr> [ <op> <expr> ]+
          | <num>
          | <ident>
-<stmt> ::= let <ident> '=' <expr>
+         | <ident> '=' <expr>
+         | let <ident> '=' <expr>
          | var <ident> '=' <expr>
-<prgm> ::= [<stmt> ';']* <expr>
+<prgm> ::= [<expr> ';']* <expr>
 ```
 
 ## Examples
