@@ -5,6 +5,6 @@ use thiserror::Error;
 pub enum Error {
     #[error("Failed to read file")]
     ReadFileError(#[from] std::io::Error),
-    #[error("Parser Error: {0}")]
+    #[error("Error while parsing program")]
     ParserError(#[from] ParserError),
 }

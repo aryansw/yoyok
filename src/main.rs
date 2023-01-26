@@ -3,14 +3,16 @@
 #![feature(let_chains)]
 #![feature(assert_matches)]
 
+use std::fs;
+
 use crate::error::Error;
 use anyhow::Context;
 use clap::Parser;
 use parser::parser::parse;
 
 // Modules
-mod error;
 mod ast;
+mod error;
 mod parser;
 
 /// Simple program to greet a person
@@ -21,14 +23,11 @@ struct Args {
     file: String,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    let source = std::fs::read_to_string(&args.file)
-        .context("Failed to read file")
-        .unwrap();
-    run_str(&source)
-        .context("Failed to compile program")
-        .unwrap();
+    let source = fs::read_to_string(&args.file).context("Failed to read file")?;
+    run_str(&source).context("Failed to compile program")?;
+    Ok(())
 }
 
 // Run program from string

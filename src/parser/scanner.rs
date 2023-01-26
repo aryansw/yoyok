@@ -51,10 +51,10 @@ impl<'a> Scanner<'a> {
                 if is_keyword(&word) {
                     Ok(Keyword(word.into()))
                 } else {
-                    Ok(Ident(word))
+                    Ok(Name(word))
                 }
             }
-            Some(c) if is_operator(c) => Ok(Ident(self.next_op()?)),
+            Some(c) if is_operator(c) => Ok(Op(self.next_op()?)),
             Some(c) if is_delim(c) => {
                 self.next_char();
                 Ok(Delim(c))
@@ -69,8 +69,8 @@ impl<'a> Scanner<'a> {
         .map(|tok| tok.with_pos(pos))
     }
 
-    fn next_op(&mut self) -> Parse<String> {
-        let mut op = String::new();
+    fn next_op(&mut self) -> Parse<Vec<char>> {
+        let mut op = vec![];
         while let Some(c) = self.peek_char() && is_operator(c) {
             op.push(c);
             self.next_char();
@@ -140,8 +140,8 @@ mod tests {
     fn test_scanner() -> Result<(), Error> {
         let mut scan = Scanner::new("let x = 5;");
         assert_eq!(scan.next()?.token, Keyword(Let));
-        assert_eq!(scan.next()?.token, Ident("x".into()));
-        assert_eq!(scan.next()?.token, Ident("=".into()));
+        assert_eq!(scan.next()?.token, Name("x".into()));
+        assert_eq!(scan.next()?.token, Op(vec!['=']));
         assert_eq!(scan.next()?.token, Number(5));
         assert_eq!(scan.next()?.token, Delim(';'));
         assert_eq!(scan.next()?.token, EOF);

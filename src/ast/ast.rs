@@ -10,20 +10,33 @@ pub enum Operator {
 #[derive(Debug)]
 pub enum Expression {
     Binary {
-        left: Box<Expression>,
+        lhs: Box<Expression>,
         op: Operator,
-        right: Box<Expression>,
+        rhs: Box<Expression>,
     },
     Number(i64),
     Reference(String),
-    VarDec {
+    Var {
         name: String,
-        expr: Box<Expression>,
+        value: Box<Expression>,
     },
-    Constant {
+    Let {
         name: String,
-        expr: Box<Expression>,
+        value: Box<Expression>,
     },
 }
 
 pub type Program = Vec<Expression>;
+
+impl Operator {
+    pub fn from(op: &[char]) -> Self {
+        match op {
+            ['+'] => Operator::Add,
+            ['-'] => Operator::Sub,
+            ['*'] => Operator::Mul,
+            ['/'] => Operator::Div,
+            ['='] => Operator::Assign,
+            _ => panic!("Invalid operator"),
+        }
+    }
+}
