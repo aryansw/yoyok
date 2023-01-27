@@ -32,6 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Run program from string
 fn run_str(source: &str) -> Result<(), Error> {
-    parse(source)?;
+    let ast = parse(source)?;
+    println!("{}", ast);
     Ok(())
 }

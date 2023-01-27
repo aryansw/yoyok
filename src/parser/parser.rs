@@ -30,6 +30,7 @@ macro_rules! expect {
 // Minimum precedence of the next operator
 fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
     let tok = scan.next()?;
+
     let mut expr = match tok.token {
         Number(n) => Exp::Number(n),
         Name(x) => Exp::Reference(x),
@@ -49,6 +50,8 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
         }
         _ => Err(Error::UnexpectedToken("".into(), tok))?,
     };
+
+    // Operator Parsing (with Precedence Climbing)
     loop {
         let op = match scan.peek()?.token {
             Op(x) => {
@@ -75,20 +78,6 @@ pub fn parse(src: &str) -> Result<Program, Error> {
         expr.push(parse_expr(&mut scan, 0)?);
         expect!(scan, EOF | Delim(';'))?;
     }
-
-    println!("{:?}", expr);
+    
     Ok(Program(expr))
-}
-
-fn debug_print(src: &str) -> Result<(), Error> {
-    let mut scan = Scanner::new(src);
-    println!("Program:\n\n{}\n\n", src);
-    let mut tok = scan.next()?;
-    println!("Tokens:\n");
-    while !matches!(tok.token, TokenType::EOF) {
-        println!("{:?}", tok.token);
-        tok = scan.peek()?;
-        scan.next()?;
-    }
-    Ok(())
 }
