@@ -26,7 +26,7 @@ pub enum Expression {
     },
 }
 
-pub type Program = Vec<Expression>;
+pub struct Program(pub Vec<Expression>);
 
 impl Operator {
     pub fn from(op: &[char]) -> Self {
@@ -37,6 +37,21 @@ impl Operator {
             ['/'] => Operator::Div,
             ['='] => Operator::Assign,
             _ => panic!("Invalid operator"),
+        }
+    }
+
+    pub fn prec(&self) -> u8 {
+        match self {
+            Operator::Add | Operator::Sub => 1,
+            Operator::Mul | Operator::Div => 2,
+            Operator::Assign => 3,
+        }
+    }
+
+    pub fn assoc(&self) -> u8 {
+        match self {
+            Operator::Add | Operator::Sub | Operator::Mul | Operator::Div => 1,
+            Operator::Assign => 0,
         }
     }
 }

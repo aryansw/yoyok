@@ -33,7 +33,7 @@ impl<'a> Scanner<'a> {
 
     pub fn next(&mut self) -> Parse<Token> {
         if let Some(tok) = self.next.take() {
-            return Ok(tok);
+            Ok(tok)
         } else {
             Ok(self.next_tok()?)
         }

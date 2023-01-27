@@ -7,6 +7,7 @@
 ```bnf
 <op>   ::= ['+' | '-' | '*' | '/']+
 <expr> ::= <expr> [ <op> <expr> ]+
+         | '(' <expr> ')'
          | <num>
          | <ident>
          | <ident> '=' <expr>

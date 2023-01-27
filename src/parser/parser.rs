@@ -13,7 +13,7 @@ use super::{scanner::Scanner, tokens::TokenType};
 macro_rules! expect {
     ($scan:ident, $(|)? $( $pattern:pat_param )|+ $( if let $guard: expr )? $(,)?) => {
         {
-            let tok = $scan.peek()?;
+            let tok = $scan.next()?;
             match &tok.token {
                 $( $pattern )|+ $( if $guard )? => {
                     Ok(())
@@ -27,34 +27,44 @@ macro_rules! expect {
     };
 }
 
-fn parse_expr(scan: &mut Scanner) -> Result<Exp, Error> {
+// Minimum precedence of the next operator
+fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
     let tok = scan.next()?;
-    let expr = match tok.token {
+    let mut expr = match tok.token {
         Number(n) => Exp::Number(n),
         Name(x) => Exp::Reference(x),
         Keyword(key) => {
             let name = scan.next()?.name()?;
             expect!(scan, Op(x) if let ['='] == x[..])?;
-            scan.next()?;
-            let value = Box::new(parse_expr(scan)?);
+            let value = Box::new(parse_expr(scan, 0)?);
             match key {
                 Let => Exp::Let { name, value },
                 Var => Exp::Var { name, value },
             }
         }
+        Delim('(') => {
+            let expr = parse_expr(scan, 0)?;
+            expect!(scan, Delim(')'))?;
+            expr
+        }
         _ => Err(Error::UnexpectedToken("".into(), tok))?,
     };
-    if let Op(_) = scan.peek()?.token {
-        let op = scan.next()?.to_op()?;
-        let rhs = Box::new(parse_expr(scan)?);
-        Ok(Exp::Binary {
+    loop {
+        let op = match scan.peek()?.token {
+            Op(x) => {
+                scan.next()?;
+                Operator::from(&x)
+            }
+            _ => break,
+        };
+        let rhs = parse_expr(scan, op.prec() + op.assoc())?;
+        expr = Exp::Binary {
             lhs: Box::new(expr),
             op,
-            rhs,
-        })
-    } else {
-        Ok(expr)
+            rhs: Box::new(rhs),
+        };
     }
+    Ok(expr)
 }
 
 pub fn parse(src: &str) -> Result<Program, Error> {
@@ -62,15 +72,12 @@ pub fn parse(src: &str) -> Result<Program, Error> {
     let mut expr = Vec::new();
 
     while scan.peek()?.token != EOF {
-        // Parse an expression (cannot use a function here 😔 cause borrow-checker stuff)
-        expr.push(parse_expr(&mut scan)?);
-        // Ensure that after an expression, there is either an EOF or a semicolon
+        expr.push(parse_expr(&mut scan, 0)?);
         expect!(scan, EOF | Delim(';'))?;
-        scan.next()?;
     }
 
     println!("{:?}", expr);
-    Ok(expr)
+    Ok(Program(expr))
 }
 
 fn debug_print(src: &str) -> Result<(), Error> {

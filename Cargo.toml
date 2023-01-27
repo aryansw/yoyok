@@ -11,4 +11,5 @@ description = "A rust-like language"
 anyhow = { version = "1.0.68", features = ["backtrace"] }
 clap = { version = "4.1.1", features = ["derive"] }
 once_cell = "1.17.0"
+shrinkwraprs = "0.3.0"
 thiserror = "1.0.38"
