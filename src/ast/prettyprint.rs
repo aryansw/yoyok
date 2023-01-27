@@ -4,8 +4,13 @@ use super::ast::{Expression, Operator, Program};
 
 impl Display for Program {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for expr in &self.0 {
-            writeln!(f, "{}", expr)?;
+        let mut it = self.0.iter().peekable();
+        while let Some(expr) = it.next() {
+            if it.peek().is_none() {
+                write!(f, "{}", expr);
+            } else {
+                writeln!(f, "{};", expr)?;
+            }
         }
         Ok(())
     }
@@ -18,7 +23,10 @@ impl Display for Expression {
             Expression::Reference(x) => write!(f, "{}", x),
             Expression::Let { name, value } => write!(f, "let {} = {}", name, value),
             Expression::Var { name, value } => write!(f, "var {} = {}", name, value),
-            Expression::Binary { op, lhs, rhs } => write!(f, "({} {} {})", lhs, op, rhs),
+            Expression::Binary { op, lhs, rhs } => match op {
+                Operator::Assign => write!(f, "{} {} {}", lhs, op, rhs),
+                _ => write!(f, "({} {} {})", lhs, op, rhs),
+            },
         }
     }
 }

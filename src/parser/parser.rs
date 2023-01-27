@@ -1,7 +1,7 @@
 use std::f32::consts::E;
 
 use colored::Colorize;
-use log::debug;
+use log::{debug, trace};
 
 use crate::{
     ast::ast::{Expression as Exp, Operator, Program},
@@ -82,7 +82,10 @@ pub fn parse(src: &str) -> Result<Program, Error> {
         expect!(scan, EOF | Delim(';'))?;
     }
     let prgm = Program(expr);
-    debug!("{}", "AST:".bright_yellow());
-    debug!("{}", format!("{}", prgm).bright_cyan());
+    debug!(
+        "{}\n{}",
+        "AST:".bright_yellow(),
+        format!("{}", prgm).bright_cyan()
+    );
     Ok(prgm)
 }
