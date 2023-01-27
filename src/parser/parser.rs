@@ -37,6 +37,24 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
     let mut expr = match tok.token {
         Number(n) => Exp::Number(n),
         Name(x) => Exp::Reference(x),
+        Keyword(If) => {
+            expect!(scan, Delim('('))?; // (
+            let cond = Box::new(parse_expr(scan, 0)?);
+            expect!(scan, Delim(')'))?; // )
+            expect!(scan, Delim('{'))?; // {
+            let then = Box::new(parse_expr(scan, 0)?);
+            expect!(scan, Delim('}'))?; // }
+            let else_ = if scan.peek()?.token == Keyword(Else) {
+                scan.next()?; // else
+                expect!(scan, Delim('{'))?; // {
+                let else_ = Box::new(parse_expr(scan, 0)?);
+                expect!(scan, Delim('}'))?; // }
+                Some(else_)
+            } else {
+                None
+            };
+            Exp::If { cond, then, else_ }
+        }
         Keyword(key) => {
             let name = scan.next()?.name()?;
             expect!(scan, Op(x) if let ['='] == x[..])?;
@@ -44,6 +62,7 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
             match key {
                 Let => Exp::Let { name, value },
                 Var => Exp::Var { name, value },
+                _ => unreachable!(),
             }
         }
         Delim('(') => {

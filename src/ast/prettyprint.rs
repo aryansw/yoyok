@@ -27,6 +27,10 @@ impl Display for Expression {
                 Operator::Assign => write!(f, "{} {} {}", lhs, op, rhs),
                 _ => write!(f, "({} {} {})", lhs, op, rhs),
             },
+            Expression::If { cond, then, else_ } => match else_ {
+                Some(else_) => write!(f, "if ({}) {{ {} }} else {{ {} }}", cond, then, else_),
+                None => write!(f, "if ({}) {{ {} }}", cond, then),
+            },
         }
     }
 }

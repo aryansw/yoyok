@@ -24,6 +24,8 @@ pub enum TokenType {
 pub enum Keyword {
     Let,
     Var,
+    If,
+    Else,
 }
 
 impl TokenType {
@@ -37,6 +39,8 @@ impl Into<Keyword> for String {
         match self.as_str() {
             "let" => Keyword::Let,
             "var" => Keyword::Var,
+            "if" => Keyword::If,
+            "else" => Keyword::Else,
             _ => panic!("Invalid keyword"),
         }
     }

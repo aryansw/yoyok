@@ -1,0 +1,13 @@
+let x = 30 * 45;
+var y = 322 + 22;
+
+# this text should be ignored
+
+let z = 24 + 45;
+if (z = 100) {
+  z = 100
+} else {
+  z = 0
+};
+
+34 + 34

@@ -24,6 +24,11 @@ pub enum Expression {
         name: String,
         value: Box<Expression>,
     },
+    If {
+        cond: Box<Expression>,
+        then: Box<Expression>,
+        else_: Option<Box<Expression>>,
+    },
 }
 
 pub struct Program(pub Vec<Expression>);
