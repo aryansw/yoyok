@@ -10,6 +10,8 @@ description = "A rust-like language"
 [dependencies]
 anyhow = { version = "1.0.68", features = ["backtrace"] }
 clap = { version = "4.1.1", features = ["derive"] }
+colored = "2.0.0"
+log = "0.4.17"
 once_cell = "1.17.0"
 shrinkwraprs = "0.3.0"
 thiserror = "1.0.38"
