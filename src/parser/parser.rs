@@ -53,14 +53,15 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             };
             Exp::If { cond, then, else_ }
         }
-        Keyword(key) => {
+        Keyword(Else) => Err(Error::UnexpectedToken("".into(), tok))?,
+        Keyword(ref key) => {
             let name = scan.next()?.name()?;
             expect!(scan, Op(x) if let ['='] == x[..])?;
             let value = Box::new(parse_expr(scan, 0)?);
             match key {
                 Let => Exp::Let { name, value },
                 Var => Exp::Var { name, value },
-                _ => unreachable!(),
+                _ => Err(Error::UnexpectedToken("".into(), tok))?,
             }
         }
         Delim('(') => {
@@ -76,7 +77,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
         let op = match scan.peek()?.token {
             Op(x) => {
                 scan.next()?;
-                Operator::from(&x)
+                Operator::from(&x)?
             }
             _ => break,
         };
@@ -102,7 +103,34 @@ pub fn parse_seq(scan: &mut Scanner) -> Result<Seq, Error> {
 
 pub fn parse(src: &str) -> Result<Seq, Error> {
     let scan = &mut Scanner::new(src);
-    let expr = parse_seq(scan)?;
+    let expr = parse_seq(scan).map_err(|e| {
+        match e {
+            Error::UnexpectedToken(s, tok) => {
+                let pos = tok.pos;
+                // Figure out the line and column of the error
+                let line = src[..pos].lines().count();
+                let col = src[..pos].lines().last().unwrap().len();
+                // Print the line with the error
+                let line = src.lines().nth(line - 1).unwrap();
+                let line = format!("{}", line.bright_yellow());
+                // Print a caret under the error
+                println!(
+                    "{}\n{}\n",
+                    line,
+                    format!(
+                        "{}{}{}",
+                        " ".repeat(col),
+                        "^".bright_red(),
+                        format!(" {}", s).yellow()
+                    )
+                );
+                Error::UnexpectedToken(s, tok)
+            }
+            _ => e,
+        }
+    })?;
+    // Expect EOF
+    expect!(scan, EOF)?;
     let prgm = expr;
     debug!(
         "{}\n{}",

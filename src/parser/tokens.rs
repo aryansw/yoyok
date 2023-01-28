@@ -4,7 +4,7 @@ use std::fmt::Display;
 #[derive(Debug, Clone)]
 pub struct Token {
     pub token: TokenType,
-    pos: usize,
+    pub pos: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]

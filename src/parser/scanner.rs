@@ -58,7 +58,7 @@ impl<'a> Scanner<'a> {
                 self.consume_line();
                 self.next_tok().map(|tok| tok.token)
             }
-            Some(x) => Err(Error::UnrecognizedToken(x)),
+            Some(x) => Err(Error::UnrecognizedToken(x, pos)),
             None => Ok(EOF),
         }
         .map(|tok| tok.with_pos(pos))

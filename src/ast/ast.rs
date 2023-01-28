@@ -1,3 +1,5 @@
+use crate::parser::error::Error;
+
 #[derive(Debug)]
 #[cfg_attr(test, derive(Clone, PartialEq))]
 pub enum Operator {
@@ -39,16 +41,16 @@ pub enum Expression {
 pub struct Sequence(pub Vec<Expression>);
 
 impl Operator {
-    pub fn from(op: &[char]) -> Self {
-        match op {
+    pub fn from(op: &[char]) -> Result<Self, Error> {
+        Ok(match op {
             ['+'] => Operator::Add,
             ['-'] => Operator::Sub,
             ['*'] => Operator::Mul,
             ['/'] => Operator::Div,
             ['='] => Operator::Assign,
             ['>'] => Operator::Gt,
-            _ => panic!("Invalid operator"),
-        }
+            _ => return Err(Error::InvalidOperator(op.iter().collect())),
+        })
     }
 
     pub fn prec(&self) -> u8 {
