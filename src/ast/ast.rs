@@ -1,4 +1,5 @@
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
+#[cfg_attr(test, derive(Clone, PartialEq))]
 pub enum Operator {
     Add,
     Sub,
@@ -8,7 +9,8 @@ pub enum Operator {
     Gt,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
+#[cfg_attr(test, derive(Clone, PartialEq))]
 pub enum Expression {
     Binary {
         lhs: Box<Expression>,
@@ -32,7 +34,8 @@ pub enum Expression {
     },
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
+#[cfg_attr(test, derive(Clone, PartialEq))]
 pub struct Sequence(pub Vec<Expression>);
 
 impl Operator {
