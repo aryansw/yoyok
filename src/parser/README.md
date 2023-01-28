@@ -13,12 +13,12 @@
          | <ident> '=' <expr>
          | let <ident> '=' <expr>
          | var <ident> '=' <expr>
-         | if <expr> { <expr> } else { <expr> }
-<seq>  ::= [<expr> ';']+
-<prgm> ::= [<expr> ';']* <expr>
+         | if <expr> '{' <expr> '}' else '{' <expr> '}'
+<seq>  ::= | [<expr> ';']* <expr>
+<prgm> ::= <seq>
 ```
 
-TODO: Rewrite this to handle scopes and stuff
+TODO: Rewrite this to handle scopes and Units
 
 ## Examples
 

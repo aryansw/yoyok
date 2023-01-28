@@ -1,37 +1,44 @@
 use std::fmt::Display;
 
-use super::ast::{Expression, Operator, Program};
+use super::ast::{Expression, Operator};
 
-impl Display for Program {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut it = self.0.iter().peekable();
-        while let Some(expr) = it.next() {
-            if it.peek().is_none() {
-                write!(f, "{}", expr);
-            } else {
-                writeln!(f, "{};", expr)?;
+impl Expression {
+    fn display(&self, idt: i32) -> String {
+        match self {
+            Self::Number(n) => format!("{}", n),
+            Self::Reference(s) => format!("{}", s),
+            Self::Binary { lhs, op, rhs } => match op {
+                Operator::Assign => {
+                    format!("{} {} {}", lhs.display(idt), op, rhs.display(idt))
+                }
+                _ => format!("({} {} {})", lhs.display(idt), op, rhs.display(idt)),
+            },
+            Self::Var { name, value } => format!("var {} = {}", name, value.display(idt)),
+            Self::Let { name, value } => format!("let {} = {}", name, value.display(idt)),
+            Self::If { cond, then, else_ } => {
+                let idt = idt + 2;
+                let then = apply_indent(then.display(idt), 2);
+                let else_ = else_.as_ref().map(|e| apply_indent(e.display(idt), 2));
+                match else_ {
+                    Some(e) => format!("if {} {{\n{}}}\nelse {{\n{}}}", cond.display(idt), then, e),
+                    None => format!("if {} {{\n{}}}", cond.display(idt), then),
+                }
+            }
+            Self::Sequence(seq) => {
+                let mut s = String::new();
+                for e in seq {
+                    s.push_str(&e.display(idt));
+                    s.push_str(";\n");
+                }
+                s
             }
         }
-        Ok(())
     }
 }
 
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Expression::Number(n) => write!(f, "{}", n),
-            Expression::Reference(x) => write!(f, "{}", x),
-            Expression::Let { name, value } => write!(f, "let {} = {}", name, value),
-            Expression::Var { name, value } => write!(f, "var {} = {}", name, value),
-            Expression::Binary { op, lhs, rhs } => match op {
-                Operator::Assign => write!(f, "{} {} {}", lhs, op, rhs),
-                _ => write!(f, "({} {} {})", lhs, op, rhs),
-            },
-            Expression::If { cond, then, else_ } => match else_ {
-                Some(else_) => write!(f, "if ({}) {{ {} }} else {{ {} }}", cond, then, else_),
-                None => write!(f, "if ({}) {{ {} }}", cond, then),
-            },
-        }
+        write!(f, "{}", self.display(0))
     }
 }
 
@@ -45,4 +52,15 @@ impl Display for Operator {
             Operator::Assign => write!(f, "="),
         }
     }
+}
+
+fn apply_indent(str: String, idt: i32) -> String {
+    // Apply same indentation to all lines
+    let mut s = String::new();
+    for line in str.lines() {
+        s.push_str(&" ".repeat(idt as usize));
+        s.push_str(line);
+        s.push_str("\n");
+    }
+    s
 }

@@ -29,9 +29,8 @@ pub enum Expression {
         then: Box<Expression>,
         else_: Option<Box<Expression>>,
     },
+    Sequence(Vec<Expression>),
 }
-
-pub struct Program(pub Vec<Expression>);
 
 impl Operator {
     pub fn from(op: &[char]) -> Self {

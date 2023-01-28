@@ -4,7 +4,7 @@ use colored::Colorize;
 use log::{debug, trace};
 
 use crate::{
-    ast::ast::{Expression as Exp, Operator, Program},
+    ast::ast::{Expression as Exp, Operator},
     parser::error::Error,
     parser::tokens::Keyword::*,
     parser::tokens::TokenType::*,
@@ -42,12 +42,12 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
             let cond = Box::new(parse_expr(scan, 0)?);
             expect!(scan, Delim(')'))?; // )
             expect!(scan, Delim('{'))?; // {
-            let then = Box::new(parse_expr(scan, 0)?);
+            let then = Box::new(parse_seq(scan)?);
             expect!(scan, Delim('}'))?; // }
             let else_ = if scan.peek()?.token == Keyword(Else) {
                 scan.next()?; // else
                 expect!(scan, Delim('{'))?; // {
-                let else_ = Box::new(parse_expr(scan, 0)?);
+                let else_ = Box::new(parse_seq(scan)?);
                 expect!(scan, Delim('}'))?; // }
                 Some(else_)
             } else {
@@ -92,15 +92,19 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
     Ok(expr)
 }
 
-pub fn parse(src: &str) -> Result<Program, Error> {
-    let mut scan = &mut Scanner::new(src);
-    let mut expr = Vec::new();
-
-    while scan.peek()?.token != EOF {
-        expr.push(parse_expr(&mut scan, 0)?);
-        expect!(scan, EOF | Delim(';'))?;
+pub fn parse_seq(scan: &mut Scanner) -> Result<Exp, Error> {
+    let mut exprs = vec![parse_expr(scan, 0)?];
+    while matches!(scan.peek()?.token, Delim(';')) {
+        scan.next()?;
+        exprs.push(parse_expr(scan, 0)?);
     }
-    let prgm = Program(expr);
+    Ok(Exp::Sequence(exprs))
+}
+
+pub fn parse(src: &str) -> Result<Exp, Error> {
+    let mut scan = &mut Scanner::new(src);
+    let mut expr = parse_seq(scan)?;
+    let prgm = expr;
     debug!(
         "{}\n{}",
         "AST:".bright_yellow(),
