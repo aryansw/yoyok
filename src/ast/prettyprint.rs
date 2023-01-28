@@ -26,9 +26,13 @@ impl Expression {
             }
             Self::Sequence(seq) => {
                 let mut s = String::new();
-                for e in seq {
-                    s.push_str(&e.display(idt));
-                    s.push_str(";\n");
+                let mut it = seq.iter().peekable();
+                while let Some(expr) = it.next() {
+                    if it.peek().is_none() {
+                        s.push_str(&expr.display(idt));
+                    } else {
+                        s.push_str(&format!("{};\n", expr.display(idt)));
+                    }
                 }
                 s
             }
@@ -50,6 +54,7 @@ impl Display for Operator {
             Operator::Mul => write!(f, "*"),
             Operator::Div => write!(f, "/"),
             Operator::Assign => write!(f, "="),
+            Operator::Gt => write!(f, ">"),
         }
     }
 }

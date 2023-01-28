@@ -1,27 +1,26 @@
-let x = 30 * 45 - 233;
-var y = 322 + 22;
-
-# this text should be ignored
-
-let z = 24 + 45;
-if (z = 100) {
+let x = (30 * (45 - 233));
+var y = (322 + 22);
+let z = (24 + 45);
+if (z > 100) {
   z = 100;
-  tr = y + 345;
-  if (tr = 100) {
+  tr = (y + 345);
+  if (z > 100) {
     tr = 100
-  } else {
-    if (tr = 0) {
+  }
+  else {
+    if ((z + 45) > 100 + 45 * 44) {
       tr = 0
-    } else {
+    }
+    else {
       tr = 0
     };
     tr = 0
   };
   y = 10
-} else {
+}
+else {
   z = 0;
   ghg = 5;
   10
 };
-
-34 + 34
+(34 + 34)

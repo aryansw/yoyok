@@ -18,7 +18,7 @@
 <prgm> ::= <seq>
 ```
 
-TODO: Rewrite this to handle scopes and Units
+TODO: To split up the grammar into multiple "groups"
 
 ## Examples
 

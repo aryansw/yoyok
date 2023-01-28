@@ -5,6 +5,7 @@ pub enum Operator {
     Mul,
     Div,
     Assign,
+    Gt,
 }
 
 #[derive(Debug)]
@@ -40,22 +41,23 @@ impl Operator {
             ['*'] => Operator::Mul,
             ['/'] => Operator::Div,
             ['='] => Operator::Assign,
+            ['>'] => Operator::Gt,
             _ => panic!("Invalid operator"),
         }
     }
 
     pub fn prec(&self) -> u8 {
         match self {
-            Operator::Add | Operator::Sub => 1,
-            Operator::Mul | Operator::Div => 2,
-            Operator::Assign => 3,
+            Self::Add | Self::Sub => 1,
+            Self::Mul | Self::Div => 2,
+            Self::Assign | Self::Gt => 3,
         }
     }
 
     pub fn assoc(&self) -> u8 {
         match self {
-            Operator::Add | Operator::Sub | Operator::Mul | Operator::Div => 1,
-            Operator::Assign => 0,
+            Self::Add | Self::Sub | Self::Mul | Self::Div => 1,
+            Self::Assign | Self::Gt => 0,
         }
     }
 }

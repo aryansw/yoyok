@@ -92,6 +92,7 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
     Ok(expr)
 }
 
+// As long as we see a semicolon, there's a sequence of expressions
 pub fn parse_seq(scan: &mut Scanner) -> Result<Exp, Error> {
     let mut exprs = vec![parse_expr(scan, 0)?];
     while matches!(scan.peek()?.token, Delim(';')) {
