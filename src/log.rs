@@ -1,18 +1,10 @@
 use colored::Colorize;
 use log::{Level, Metadata, Record};
 
-struct SimpleLogger {
-    verbose: bool,
-}
-
-impl SimpleLogger {
-    fn set_verbose(&mut self, v: bool) {
-        self.verbose = v;
-    }
-}
+struct SimpleLogger;
 
 impl log::Log for SimpleLogger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
+    fn enabled(&self, _metadata: &Metadata) -> bool {
         true
     }
 
@@ -33,7 +25,7 @@ impl log::Log for SimpleLogger {
 
 use log::{LevelFilter, SetLoggerError};
 
-static LOGGER: SimpleLogger = SimpleLogger { verbose: false };
+static LOGGER: SimpleLogger = SimpleLogger;
 
 pub fn init(v: bool) -> Result<(), SetLoggerError> {
     log::set_logger(&LOGGER).map(|()| {

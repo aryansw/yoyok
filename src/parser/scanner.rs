@@ -1,12 +1,7 @@
-use anyhow::Context;
-
 use super::{
     constants::{is_comment, is_delim, is_keyword, is_operator},
     error::{Error, Parse},
-    tokens::{
-        Token,
-        TokenType::{self, *},
-    },
+    tokens::{Token, TokenType::*},
 };
 
 pub struct Scanner<'a> {
@@ -129,10 +124,9 @@ impl<'a> Scanner<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::assert_matches::assert_matches;
 
-    use crate::parser::scanner::TokenType::*;
-    use crate::parser::{error::Error, tokens::Keyword::*};
+    use crate::parser::tokens::Keyword::*;
+    use crate::parser::{error::Error, tokens::TokenType::*};
 
     use super::Scanner;
 

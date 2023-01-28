@@ -1,7 +1,5 @@
-use std::f32::consts::E;
-
 use colored::Colorize;
-use log::{debug, trace};
+use log::debug;
 
 use crate::{
     ast::ast::{Expression as Exp, Operator, Sequence as Seq},
@@ -10,7 +8,7 @@ use crate::{
     parser::tokens::TokenType::*,
 };
 
-use super::{scanner::Scanner, tokens::TokenType};
+use super::scanner::Scanner;
 
 // Peek at the next token, and return an error if it doesn't match the pattern
 macro_rules! expect {
@@ -21,7 +19,7 @@ macro_rules! expect {
                 $( $pattern )|+ $( if $guard )? => {
                     Ok(())
                 },
-                x => {
+                _x => {
                     let pattern = stringify!($( $pattern )|+ $( if $guard )?).into();
                     Err(Error::UnexpectedToken(pattern, tok))
                 },
@@ -31,7 +29,7 @@ macro_rules! expect {
 }
 
 // Minimum precedence of the next operator
-fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
+fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
     let tok = scan.next()?;
 
     let mut expr = match tok.token {
@@ -103,8 +101,8 @@ pub fn parse_seq(scan: &mut Scanner) -> Result<Seq, Error> {
 }
 
 pub fn parse(src: &str) -> Result<Seq, Error> {
-    let mut scan = &mut Scanner::new(src);
-    let mut expr = parse_seq(scan)?;
+    let scan = &mut Scanner::new(src);
+    let expr = parse_seq(scan)?;
     let prgm = expr;
     debug!(
         "{}\n{}",

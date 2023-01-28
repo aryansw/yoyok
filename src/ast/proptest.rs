@@ -71,7 +71,7 @@ mod tests {
         #[test]
         fn proptest_parse(expr in arb_seq()){
             let src = format!("{}", expr);
-            let parse = parse(&src).inspect_err(|e| println!("\n{}\n{}", format!("Test input:").bright_red(), src))?;
+            let _parse = parse(&src).inspect_err(|_e| println!("\n{}\n{}", format!("Test input:").bright_red(), src))?;
         }
     }
 }

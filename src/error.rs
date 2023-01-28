@@ -7,4 +7,6 @@ pub enum Error {
     ReadFileError(#[from] std::io::Error),
     #[error("Error while parsing program")]
     ParserError(#[from] ParserError),
+    #[error("Error with logging")]
+    LogError,
 }

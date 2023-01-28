@@ -1,8 +1,5 @@
-use std::fmt::Display;
-
-use crate::ast::ast::Operator;
-
 use super::error::Error;
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub struct Token {
@@ -58,13 +55,6 @@ impl Token {
         match &self.token {
             TokenType::Name(name) => Ok(name.clone()),
             _ => Err(Error::UnexpectedToken("Name(_)".into(), self.clone())),
-        }
-    }
-
-    pub fn to_op(&self) -> Result<Operator, Error> {
-        match &self.token {
-            TokenType::Op(op) => Ok(Operator::from(op)),
-            _ => Err(Error::UnexpectedToken("Op(_)".into(), self.clone())),
         }
     }
 }
