@@ -12,7 +12,7 @@ pub struct Token {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
-    Number(i64),
+    Number(u64),
     Op(Vec<char>),
     Name(String),
     Keyword(Keyword),

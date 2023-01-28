@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
     Add,
     Sub,
@@ -8,14 +8,14 @@ pub enum Operator {
     Gt,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
     Binary {
         lhs: Box<Expression>,
         op: Operator,
         rhs: Box<Expression>,
     },
-    Number(i64),
+    Number(u64),
     Reference(String),
     Var {
         name: String,
@@ -27,11 +27,13 @@ pub enum Expression {
     },
     If {
         cond: Box<Expression>,
-        then: Box<Expression>,
-        else_: Option<Box<Expression>>,
+        then: Sequence,
+        else_: Option<Sequence>,
     },
-    Sequence(Vec<Expression>),
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sequence(pub Vec<Expression>);
 
 impl Operator {
     pub fn from(op: &[char]) -> Self {

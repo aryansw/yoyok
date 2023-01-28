@@ -4,7 +4,7 @@ use colored::Colorize;
 use log::{debug, trace};
 
 use crate::{
-    ast::ast::{Expression as Exp, Operator},
+    ast::ast::{Expression as Exp, Operator, Sequence as Seq},
     parser::error::Error,
     parser::tokens::Keyword::*,
     parser::tokens::TokenType::*,
@@ -42,12 +42,12 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
             let cond = Box::new(parse_expr(scan, 0)?);
             expect!(scan, Delim(')'))?; // )
             expect!(scan, Delim('{'))?; // {
-            let then = Box::new(parse_seq(scan)?);
+            let then = parse_seq(scan)?;
             expect!(scan, Delim('}'))?; // }
             let else_ = if scan.peek()?.token == Keyword(Else) {
                 scan.next()?; // else
                 expect!(scan, Delim('{'))?; // {
-                let else_ = Box::new(parse_seq(scan)?);
+                let else_ = parse_seq(scan)?;
                 expect!(scan, Delim('}'))?; // }
                 Some(else_)
             } else {
@@ -93,16 +93,16 @@ fn parse_expr(scan: &mut Scanner, min: u8) -> Result<Exp, Error> {
 }
 
 // As long as we see a semicolon, there's a sequence of expressions
-pub fn parse_seq(scan: &mut Scanner) -> Result<Exp, Error> {
+pub fn parse_seq(scan: &mut Scanner) -> Result<Seq, Error> {
     let mut exprs = vec![parse_expr(scan, 0)?];
     while matches!(scan.peek()?.token, Delim(';')) {
         scan.next()?;
         exprs.push(parse_expr(scan, 0)?);
     }
-    Ok(Exp::Sequence(exprs))
+    Ok(Seq(exprs))
 }
 
-pub fn parse(src: &str) -> Result<Exp, Error> {
+pub fn parse(src: &str) -> Result<Seq, Error> {
     let mut scan = &mut Scanner::new(src);
     let mut expr = parse_seq(scan)?;
     let prgm = expr;

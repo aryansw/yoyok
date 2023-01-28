@@ -87,7 +87,7 @@ impl<'a> Scanner<'a> {
         Ok(word)
     }
 
-    fn next_num(&mut self) -> Result<i64, Error> {
+    fn next_num(&mut self) -> Result<u64, Error> {
         let mut num = String::new();
         while let Some(c) = self.peek_char() && c.is_numeric() {
             num.push(c);

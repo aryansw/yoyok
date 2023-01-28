@@ -2,6 +2,7 @@
 // Cool features
 #![feature(let_chains)]
 #![feature(assert_matches)]
+#![feature(result_option_inspect)]
 
 use std::fs;
 
