@@ -4,10 +4,8 @@ Unsurprisingly similar syntax to Rust.
 
 ```
 let x = 5 + 45;
-let y = 45 + 34;
+var y: i32 = 45 + 34;
 x
 ```
 
-### TODOs
-- Write more examples
-- Debug Printing Mode
+- Still messing with the parser, maybe the actual compiler was the friends we made along the way

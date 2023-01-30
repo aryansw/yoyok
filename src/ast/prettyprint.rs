@@ -108,13 +108,7 @@ impl Display for Type {
             }
             Type::Array(ty, size) => write!(f, "[{}; {}]", ty, size),
             Type::Function { args, ret } => {
-                let mut s = String::new();
-                for ty in args {
-                    s.push_str(&format!("{}, ", ty));
-                }
-                s.pop();
-                s.pop();
-                write!(f, "fn({}) -> {}", s, ret)
+                write!(f, "{} -> {}", args, ret)
             }
         }
     }

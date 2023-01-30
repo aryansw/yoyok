@@ -12,6 +12,10 @@ pub enum Error {
     UnexpectedToken(String, Token),
     #[error("Unknown operator: '{0}'")]
     InvalidOperator(String),
+    #[error("Unknown size: '{0}'")]
+    InvalidSize(u8),
+    #[error("Unknown Type: '{0}'")]
+    InvalidType(Token),
 }
 
 pub type Parse<T> = Result<T, Error>;

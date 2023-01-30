@@ -2,7 +2,7 @@ use colored::Colorize;
 use log::debug;
 
 use crate::{
-    ast::ast::{Expression as Exp, Operator, Sequence as Seq},
+    ast::ast::{Expression as Exp, Operator, Sequence as Seq, Type},
     parser::error::Error,
     parser::tokens::Keyword::*,
     parser::tokens::TokenType::*,
@@ -26,6 +26,75 @@ macro_rules! expect {
             }
         }
     };
+}
+
+fn parse_opt_type(scan: &mut Scanner) -> Result<Option<Type>, Error> {
+    if let Delim(':') = scan.peek()?.token {
+        expect!(scan, Delim(':'))?;
+        Ok(Some(parse_type(scan)?))
+    } else {
+        Ok(None)
+    }
+}
+
+fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
+    let tok = scan.next()?;
+    let ty = match tok.token {
+        Name(ref x) => {
+            // First check if the beginning is i, u, f
+            let ty = match &x[..1] {
+                "i" | "u" | "f" => {
+                    let size = x[1..].parse::<u8>()?.try_into()?;
+                    match &x[..1] {
+                        "i" => Type::Signed(size),
+                        "u" => Type::Unsigned(size),
+                        "f" => Type::Float(size),
+                        _ => unreachable!(),
+                    }
+                }
+                _ => {
+                    match x.as_str() {
+                        "bool" => Type::Bool,
+                        "char" => Type::Char,
+                        _ => Err(Error::InvalidType(tok))?
+                    }
+                },
+            };
+            ty
+        }
+        Delim('(') => {
+            let mut types = vec![];
+            loop {
+                if let Delim(')') = scan.peek()?.token {
+                    expect!(scan, Delim(')'))?;
+                    break;
+                }
+                types.push(parse_type(scan)?);
+                if let Delim(',') = scan.peek()?.token {
+                    scan.next()?;
+                }
+            }
+            Type::Tuple(types)
+        }
+        Delim('[') => {
+            let ty = parse_type(scan)?;
+            expect!(scan, Delim(';'))?;
+            let size = scan.next()?.number()?;
+            expect!(scan, Delim(']'))?;
+            Type::Array(Box::new(ty), size)
+        }
+        _ => Err(Error::InvalidType(tok))?,
+    };
+    if let Op(x) = scan.peek()?.token && let ['-', '>'] = x[..] {
+        scan.next()?;
+        let ret = parse_type(scan)?;
+        Ok(Type::Function {
+            args: Box::new(ty),
+            ret: Box::new(ret),
+        })
+    } else { 
+        Ok(ty)
+    }
 }
 
 // Minimum precedence of the next operator
@@ -54,6 +123,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
         Keyword(Else) => Err(Error::UnexpectedToken("".into(), tok))?,
         Keyword(ref key) => {
             let name = scan.next()?.name()?;
+            let ty = parse_opt_type(scan)?;
             expect!(scan, Op(x) if let ['='] == x[..])?;
             let value = Box::new(parse_expr(scan, 0)?);
             let mutable = match key {
@@ -62,12 +132,11 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
                 _ => Err(Error::UnexpectedToken("".into(), tok))?,
             };
             Exp::Let {
-                    name,
-                    value,
-                    ty: None,
-                    mutable,
-                }
-               
+                name,
+                value,
+                ty,
+                mutable,
+            }
         }
         Delim('(') => {
             let expr = parse_expr(scan, 0)?;

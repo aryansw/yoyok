@@ -57,4 +57,12 @@ impl Token {
             _ => Err(Error::UnexpectedToken("Name(_)".into(), self.clone())),
         }
     }
+
+    // Number or throws an error:
+    pub fn number(&self) -> Result<u64, Error> {
+        match &self.token {
+            TokenType::Number(n) => Ok(*n),
+            _ => Err(Error::UnexpectedToken("Number(_)".into(), self.clone())),
+        }
+    }
 }

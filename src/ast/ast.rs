@@ -44,6 +44,20 @@ pub enum Size {
     SixtyFour,
 }
 
+impl TryInto<Size> for u8 {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Size, Self::Error> {
+        Ok(match self {
+            8 => Size::Eight,
+            16 => Size::Sixteen,
+            32 => Size::ThirtyTwo,
+            64 => Size::SixtyFour,
+            _ => return Err(Error::InvalidSize(self)),
+        })
+    }
+}
+
 #[derive(Debug)]
 #[cfg_attr(test, derive(Clone, PartialEq))]
 pub enum Type {
@@ -54,7 +68,7 @@ pub enum Type {
     Char,
     Tuple(Vec<Type>),
     Array(Box<Type>, u64),
-    Function { args: Vec<Type>, ret: Box<Type> },
+    Function { args: Box<Type>, ret: Box<Type> },
 }
 
 impl Type {

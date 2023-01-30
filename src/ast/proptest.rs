@@ -41,9 +41,9 @@ mod tests {
                 prop::collection::vec(inner.clone(), 1..4).prop_map(|seq| Type::Tuple(seq)),
                 (inner.clone(), any::<u64>())
                     .prop_map(|(ty, size)| Type::Array(Box::new(ty), size)),
-                (prop::collection::vec(inner.clone(), 1..4), inner.clone()).prop_map(
+                (inner.clone(), inner.clone()).prop_map(
                     |(args, ret)| Type::Function {
-                        args,
+                        args: Box::new(args),
                         ret: Box::new(ret)
                     }
                 ),

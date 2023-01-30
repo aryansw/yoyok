@@ -1,5 +1,5 @@
 /// Constants used by the parser
-const DELIMS: [char; 5] = [';', '(', ')', '{', '}'];
+const DELIMS: [char; 9] = [';', ':', ',', '(', ')', '{', '}', '[', ']'];
 const KEYWORDS: [&str; 4] = ["let", "var", "if", "else"];
 const OPERATORS: [char; 6] = ['+', '-', '*', '/', '=', '>'];
 const COMMENT: char = '#';
