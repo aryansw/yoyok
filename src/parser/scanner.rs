@@ -50,6 +50,27 @@ impl<'a> Scanner<'a> {
                 }
             }
             Some(c) if is_operator(c) => Ok(Op(self.next_op()?)),
+            Some(c) if c == '\'' => {
+                self.next_char();
+                // TODO: Handle escaped chars
+                let c = self.next_char().ok_or(Error::UnterminatedChar(pos))?;
+                self.next_char()
+                    .and_then(|c| if c == '\'' { Some(()) } else { None })
+                    .ok_or(Error::UnterminatedChar(pos))?;
+                Ok(Literal(c.into()))
+            }
+            Some(c) if c == '"' => {
+                self.next_char();
+                let mut string = String::new();
+                while let Some(c) = self.peek_char() && c != '"' {
+                    string.push(c);
+                    self.next_char();
+                }
+                self.next_char()
+                    .and_then(|c| if c == '"' { Some(()) } else { None })
+                    .ok_or(Error::UnterminatedString(pos))?;
+                Ok(Literal(string.into()))
+            }
             Some(c) if is_delim(c) => {
                 self.next_char();
                 Ok(Delim(c))

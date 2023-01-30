@@ -5,19 +5,22 @@
 ## Grammar
 
 ```bnf
-<op>   ::= ['+' | '-' | '*' | '/']+
+<op>   ::= ['+' | '-' | '*' | '/', '=', '>']+
 <type> ::= ['i' | 'u', 'f'] ['8' | '16' | '32' | '64']
          | 'bool'
          | 'char'
          | '(' [<type> ',']* ')'    // tuple
          | '['<type>' ';' <num>]'   // array
          | <type> -> <type>         // function
+<value> ::= <num>
+         | 'true' | 'false'
+         | \' <char> \'
+         | " <string> "
 <expr> ::= <expr> [ <op> <expr> ]+
          | '(' <expr> ')'
-         | <num>
-         | 'true' | 'false'
+         | <value>
+         | '[' [<expr> ',']* ']'
          | <ident>
-         | <ident> '=' <expr>
          | let <ident> [: <type>] '=' <expr>
          | var <ident> [: <type>] '=' <expr>
          | if <expr> '{' <seq> '}' else '{' <seq> '}'

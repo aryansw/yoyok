@@ -16,6 +16,10 @@ pub enum Error {
     InvalidSize(u8),
     #[error("Unknown Type: '{0}'")]
     InvalidType(Token),
+    #[error("Unterminated string '{0}'")]
+    UnterminatedString(usize),
+    #[error("Unterminated char '{0}'")]
+    UnterminatedChar(usize),
 }
 
 pub type Parse<T> = Result<T, Error>;

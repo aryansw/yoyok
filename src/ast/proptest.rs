@@ -1,7 +1,7 @@
 use proptest::{option, prelude::*};
 
 use crate::{
-    ast::ast::{Expression, Operator, Sequence, Size, Type},
+    ast::ast::{Expression, Operator, Sequence, Size, Type, Value},
     parser::parser::parse,
 };
 fn arb_operator() -> impl Strategy<Value = Operator> {
@@ -50,9 +50,11 @@ fn arb_opt_type() -> impl Strategy<Value = Option<Type>> {
 
 fn arb_expr() -> impl Strategy<Value = Expression> {
     let leaf = prop_oneof![
-        any::<u64>().prop_map(Expression::Number),
+        any::<u64>().prop_map(|x| Expression::Value(x.into())),
         "[A-Z][a-zA-Z0-9]*".prop_map(Expression::Reference),
-        any::<bool>().prop_map(Expression::Bool),
+        any::<u64>().prop_map(|x| Expression::Value(x.into())),
+        "[A-Z][a-zA-Z0-9]*".prop_map(|x| Expression::Value(Value::String(x))),
+        any::<char>().prop_map(|x| Expression::Value(Value::Char(x))),
     ];
     leaf.prop_recursive(12, 512, 10, |inner| {
         prop_oneof![

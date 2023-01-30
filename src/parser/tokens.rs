@@ -1,3 +1,5 @@
+use crate::ast::ast::Value;
+
 use super::error::Error;
 use std::fmt::Display;
 
@@ -14,7 +16,35 @@ pub enum TokenType {
     Name(String),
     Keyword(Keyword),
     Delim(char),
+    Literal(Literal),
     EOF,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal {
+    String(String),
+    Char(char),
+}
+
+impl Into<Literal> for char {
+    fn into(self) -> Literal {
+        Literal::Char(self)
+    }
+}
+
+impl Into<Literal> for String {
+    fn into(self) -> Literal {
+        Literal::String(self)
+    }
+}
+
+impl Into<Value> for Literal {
+    fn into(self) -> Value {
+        match self {
+            Literal::Char(c) => Value::Char(c),
+            Literal::String(s) => Value::String(s),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -102,8 +102,11 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
     let tok = scan.next()?;
 
     let mut expr = match tok.token {
-        Number(n) => Exp::Number(n),
+        Number(x)  => Exp::Value(x.into()),
+        Literal(x) => Exp::Value(x.into()),
         Name(x) => Exp::Reference(x),
+        Keyword(True) => Exp::Value(true.into()),
+        Keyword(False) => Exp::Value(false.into()),
         Keyword(If) => {
             let cond = Box::new(parse_expr(scan, 0)?);
             expect!(scan, Delim('{'))?; // {
@@ -120,8 +123,6 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             };
             Exp::If { cond, then, else_ }
         }
-        Keyword(True) => Exp::Bool(true),
-        Keyword(False) => Exp::Bool(false),
         Keyword(Else) => Err(Error::UnexpectedToken("".into(), tok))?,
         Keyword(ref key) => {
             let name = scan.next()?.name()?;
@@ -131,7 +132,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             let mutable = match key {
                 Let => true,
                 Var => false,
-                _ => Err(Error::UnexpectedToken("".into(), tok))?,
+                _ => Err(Error::UnexpectedToken("Key or Let".into(), tok))?,
             };
             Exp::Let {
                 name,

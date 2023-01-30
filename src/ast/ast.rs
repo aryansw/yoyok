@@ -12,8 +12,9 @@ pub enum Expression {
         op: Operator,
         rhs: Box<Expression>,
     },
-    Number(u64),
-    Bool(bool),
+    Value(Value),
+    Tuple(Vec<Expression>),
+    Array(Vec<Expression>),
     Reference(String),
     Let {
         name: String,
@@ -27,6 +28,15 @@ pub enum Expression {
         else_: Option<Sequence>,
     },
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Value {
+    Number(u64),
+    Bool(bool),
+    Char(char),
+    String(String),
+}
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
@@ -104,5 +114,18 @@ impl TryInto<Size> for u8 {
             64 => Size::SixtyFour,
             _ => return Err(Error::InvalidSize(self)),
         })
+    }
+}
+
+
+impl Into<Value> for u64 {
+    fn into(self) -> Value {
+        Value::Number(self)
+    }
+}
+
+impl Into<Value> for bool {
+    fn into(self) -> Value {
+        Value::Bool(self)
     }
 }

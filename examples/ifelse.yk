@@ -1,11 +1,13 @@
 let x = (30 * (45 - 233));
 var y = (322 + 22);
 let z = (24 + 45);
+let q = "hello ee";
+let w = '\';
 if (z > 100) {
   z = 100;
   tr = (y + 345);
   if z > 100 {
-    tr = 100
+    z = 100
   }
   else {
     if ((z + 45) > 100 + 45 * 44) {
@@ -14,9 +16,9 @@ if (z > 100) {
     else {
       tr = 0
     };
-    tr = 0
+    tr = false
   };
-  y = 10
+  y = true
 }
 else {
   z = 0;

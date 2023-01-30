@@ -1,12 +1,11 @@
 use std::fmt::Display;
 
-use super::ast::{Expression, Operator, Sequence, Size, Type};
+use super::ast::{Expression, Operator, Sequence, Size, Type, Value};
 
 impl Expression {
     fn display(&self, idt: i32) -> String {
         match self {
-            Self::Number(n) => format!("{}", n),
-            Self::Bool(b) => format!("{}", b),
+            Self::Value(v) => format!("{}", v),
             Self::Reference(s) => format!("{}", s),
             Self::Binary { lhs, op, rhs } => match op {
                 Operator::Assign => {
@@ -14,6 +13,30 @@ impl Expression {
                 }
                 _ => format!("({} {} {})", lhs.display(idt), op, rhs.display(idt)),
             },
+            Self::Tuple(v) => {
+                let mut s = String::new();
+                let mut it = v.iter().peekable();
+                while let Some(expr) = it.next() {
+                    if it.peek().is_none() {
+                        s.push_str(&expr.display(idt));
+                    } else {
+                        s.push_str(&format!("{}, ", expr.display(idt)));
+                    }
+                }
+                format!("({})", s)
+            }
+            Self::Array(v) => {
+                let mut s = String::new();
+                let mut it = v.iter().peekable();
+                while let Some(expr) = it.next() {
+                    if it.peek().is_none() {
+                        s.push_str(&expr.display(idt));
+                    } else {
+                        s.push_str(&format!("{}, ", expr.display(idt)));
+                    }
+                }
+                format!("[{}]", s)
+            }
             Self::Let {
                 name,
                 ty,
@@ -63,6 +86,17 @@ impl Display for Sequence {
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.display(0))
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Number(x) => write!(f, "{}", x),
+            Value::Bool(x) => write!(f, "{}", x),
+            Value::Char(x) => write!(f, "'{}'", x),
+            Value::String(x) => write!(f, "\"{}\"", x),
+        }
     }
 }
 
