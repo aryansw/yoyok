@@ -1,4 +1,5 @@
 use crate::parser::error::Error as ParserError;
+use proptest::test_runner::{Reason, TestCaseError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -9,4 +10,10 @@ pub enum Error {
     ParserError(#[from] ParserError),
     #[error("Error with logging")]
     LogError,
+}
+
+impl Into<Reason> for Error {
+    fn into(self) -> Reason {
+        self.to_string().into()
+    }
 }

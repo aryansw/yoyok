@@ -1,19 +1,11 @@
 use crate::parser::error::Error;
 
-#[derive(Debug)]
-#[cfg_attr(test, derive(Clone, PartialEq))]
-pub enum Operator {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Assign,
-    Gt,
-}
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sequence(pub Vec<Expression>);
 
-// TODO: Make this generic over the type of the expression
-#[derive(Debug)]
-#[cfg_attr(test, derive(Clone, PartialEq))]
+// TODO: It might be worth making this generic over the type of the expression,
+// so types can initially be optional, and then be inferred later.
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
     Binary {
         lhs: Box<Expression>,
@@ -21,6 +13,7 @@ pub enum Expression {
         rhs: Box<Expression>,
     },
     Number(u64),
+    Bool(bool),
     Reference(String),
     Let {
         name: String,
@@ -35,31 +28,17 @@ pub enum Expression {
     },
 }
 
-#[derive(Debug)]
-#[cfg_attr(test, derive(Clone, PartialEq))]
-pub enum Size {
-    Eight,
-    Sixteen,
-    ThirtyTwo,
-    SixtyFour,
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operator {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Assign,
+    Gt,
 }
 
-impl TryInto<Size> for u8 {
-    type Error = Error;
-
-    fn try_into(self) -> Result<Size, Self::Error> {
-        Ok(match self {
-            8 => Size::Eight,
-            16 => Size::Sixteen,
-            32 => Size::ThirtyTwo,
-            64 => Size::SixtyFour,
-            _ => return Err(Error::InvalidSize(self)),
-        })
-    }
-}
-
-#[derive(Debug)]
-#[cfg_attr(test, derive(Clone, PartialEq))]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Signed(Size),
     Unsigned(Size),
@@ -71,15 +50,19 @@ pub enum Type {
     Function { args: Box<Type>, ret: Box<Type> },
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Size {
+    Eight,
+    Sixteen,
+    ThirtyTwo,
+    SixtyFour,
+}
+
 impl Type {
     pub fn unit() -> Self {
         Type::Tuple(vec![])
     }
 }
-
-#[derive(Debug)]
-#[cfg_attr(test, derive(Clone, PartialEq))]
-pub struct Sequence(pub Vec<Expression>);
 
 impl Operator {
     pub fn from(op: &[char]) -> Result<Self, Error> {
@@ -107,5 +90,19 @@ impl Operator {
             Self::Add | Self::Sub | Self::Mul | Self::Div => 1,
             Self::Assign | Self::Gt => 0,
         }
+    }
+}
+
+impl TryInto<Size> for u8 {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Size, Self::Error> {
+        Ok(match self {
+            8 => Size::Eight,
+            16 => Size::Sixteen,
+            32 => Size::ThirtyTwo,
+            64 => Size::SixtyFour,
+            _ => return Err(Error::InvalidSize(self)),
+        })
     }
 }

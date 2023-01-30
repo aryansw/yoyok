@@ -6,6 +6,7 @@ impl Expression {
     fn display(&self, idt: i32) -> String {
         match self {
             Self::Number(n) => format!("{}", n),
+            Self::Bool(b) => format!("{}", b),
             Self::Reference(s) => format!("{}", s),
             Self::Binary { lhs, op, rhs } => match op {
                 Operator::Assign => {

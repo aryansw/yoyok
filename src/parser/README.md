@@ -15,6 +15,7 @@
 <expr> ::= <expr> [ <op> <expr> ]+
          | '(' <expr> ')'
          | <num>
+         | 'true' | 'false'
          | <ident>
          | <ident> '=' <expr>
          | let <ident> [: <type>] '=' <expr>
@@ -32,6 +33,14 @@ TODO: To split up the grammar into multiple "groups"
 let x = 5 + 45;
 let y = 45 + x - 20;
 y
+```
+
+Most of the parsing testing is actually done using proptest, see ![proptest](../ast/proptest.rs).
+
+- These tests ensure the parser can parse any valid AST that's generated and presented using ![prettyprint](../ast/prettyprint.rs).
+
+```
+> cargo run -- -r -v
 ```
 
 ## Helpful Resources

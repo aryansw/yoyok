@@ -1,3 +1,3 @@
 pub mod ast;
 pub mod prettyprint;
-mod proptest;
+pub mod proptest;

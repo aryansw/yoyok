@@ -23,6 +23,8 @@ pub enum Keyword {
     Var,
     If,
     Else,
+    True,
+    False,
 }
 
 impl TokenType {
@@ -38,6 +40,8 @@ impl Into<Keyword> for String {
             "var" => Keyword::Var,
             "if" => Keyword::If,
             "else" => Keyword::Else,
+            "true" => Keyword::True,
+            "false" => Keyword::False,
             _ => panic!("Invalid keyword"),
         }
     }

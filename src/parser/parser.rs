@@ -120,6 +120,8 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             };
             Exp::If { cond, then, else_ }
         }
+        Keyword(True) => Exp::Bool(true),
+        Keyword(False) => Exp::Bool(false),
         Keyword(Else) => Err(Error::UnexpectedToken("".into(), tok))?,
         Keyword(ref key) => {
             let name = scan.next()?.name()?;
