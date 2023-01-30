@@ -6,14 +6,20 @@
 
 ```bnf
 <op>   ::= ['+' | '-' | '*' | '/']+
+<type> ::= ['i' | 'u', 'f'] ['8' | '16' | '32' | '64']
+         | 'bool'
+         | 'char'
+         | '(' [<type> ',']* ')'    // tuple
+         | '['<type>' ';' <num>]'   // array
+         | <type> -> <type>         // function
 <expr> ::= <expr> [ <op> <expr> ]+
          | '(' <expr> ')'
          | <num>
          | <ident>
          | <ident> '=' <expr>
-         | let <ident> '=' <expr>
-         | var <ident> '=' <expr>
-         | if <expr> '{' <expr> '}' else '{' <expr> '}'
+         | let <ident> [: <type>] '=' <expr>
+         | var <ident> [: <type>] '=' <expr>
+         | if <expr> '{' <seq> '}' else '{' <seq> '}'
 <seq>  ::= | [<expr> ';']* <expr>
 <prgm> ::= <seq>
 ```

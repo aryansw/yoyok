@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::ast::{Expression, Operator, Sequence};
+use super::ast::{Expression, Operator, Sequence, Size, Type};
 
 impl Expression {
     fn display(&self, idt: i32) -> String {
@@ -13,19 +13,24 @@ impl Expression {
                 }
                 _ => format!("({} {} {})", lhs.display(idt), op, rhs.display(idt)),
             },
-            Self::Var { name, value } => format!("var {} = {}", name, value.display(idt)),
-            Self::Let { name, value } => format!("let {} = {}", name, value.display(idt)),
+            Self::Let {
+                name,
+                ty,
+                value,
+                mutable,
+            } => {
+                let var = if *mutable { "var" } else { "let" };
+                match ty {
+                    Some(ty) => format!("{} {}: {} = {}", var, name, ty, value.display(idt)),
+                    None => format!("{} {} = {}", var, name, value.display(idt)),
+                }
+            }
             Self::If { cond, then, else_ } => {
                 let idt = idt + 2;
                 let then = apply_indent(then.display(idt), 2);
                 let else_ = else_.as_ref().map(|e| apply_indent(e.display(idt), 2));
                 match else_ {
-                    Some(e) => format!(
-                        "if ({}) {{\n{}}}\nelse {{\n{}}}",
-                        cond.display(idt),
-                        then,
-                        e
-                    ),
+                    Some(e) => format!("if {} {{\n{}}}\nelse {{\n{}}}", cond.display(idt), then, e),
                     None => format!("if {} {{\n{}}}", cond.display(idt), then),
                 }
             }
@@ -69,6 +74,48 @@ impl Display for Operator {
             Operator::Div => write!(f, "/"),
             Operator::Assign => write!(f, "="),
             Operator::Gt => write!(f, ">"),
+        }
+    }
+}
+
+impl Display for Size {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Size::Eight => write!(f, "8"),
+            Size::Sixteen => write!(f, "16"),
+            Size::ThirtyTwo => write!(f, "32"),
+            Size::SixtyFour => write!(f, "64"),
+        }
+    }
+}
+
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Type::Signed(size) => write!(f, "i{}", size),
+            Type::Unsigned(size) => write!(f, "u{}", size),
+            Type::Float(size) => write!(f, "f{}", size),
+            Type::Bool => write!(f, "bool"),
+            Type::Char => write!(f, "char"),
+            Type::Tuple(tys) => {
+                let mut s = String::new();
+                for ty in tys {
+                    s.push_str(&format!("{}, ", ty));
+                }
+                s.pop();
+                s.pop();
+                write!(f, "({})", s)
+            }
+            Type::Array(ty, size) => write!(f, "[{}; {}]", ty, size),
+            Type::Function { args, ret } => {
+                let mut s = String::new();
+                for ty in args {
+                    s.push_str(&format!("{}, ", ty));
+                }
+                s.pop();
+                s.pop();
+                write!(f, "fn({}) -> {}", s, ret)
+            }
         }
     }
 }

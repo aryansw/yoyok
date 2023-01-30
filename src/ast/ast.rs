@@ -11,6 +11,7 @@ pub enum Operator {
     Gt,
 }
 
+// TODO: Make this generic over the type of the expression
 #[derive(Debug)]
 #[cfg_attr(test, derive(Clone, PartialEq))]
 pub enum Expression {
@@ -21,19 +22,45 @@ pub enum Expression {
     },
     Number(u64),
     Reference(String),
-    Var {
-        name: String,
-        value: Box<Expression>,
-    },
     Let {
         name: String,
         value: Box<Expression>,
+        ty: Option<Type>,
+        mutable: bool,
     },
     If {
         cond: Box<Expression>,
         then: Sequence,
         else_: Option<Sequence>,
     },
+}
+
+#[derive(Debug)]
+#[cfg_attr(test, derive(Clone, PartialEq))]
+pub enum Size {
+    Eight,
+    Sixteen,
+    ThirtyTwo,
+    SixtyFour,
+}
+
+#[derive(Debug)]
+#[cfg_attr(test, derive(Clone, PartialEq))]
+pub enum Type {
+    Signed(Size),
+    Unsigned(Size),
+    Float(Size),
+    Bool,
+    Char,
+    Tuple(Vec<Type>),
+    Array(Box<Type>, u64),
+    Function { args: Vec<Type>, ret: Box<Type> },
+}
+
+impl Type {
+    pub fn unit() -> Self {
+        Type::Tuple(vec![])
+    }
 }
 
 #[derive(Debug)]

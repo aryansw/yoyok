@@ -4,7 +4,7 @@ mod tests {
     use proptest::prelude::*;
 
     use crate::{
-        ast::ast::{Expression, Operator, Sequence},
+        ast::ast::{Expression, Operator, Sequence, Size, Type},
         parser::parser::parse,
     };
 
@@ -17,6 +17,42 @@ mod tests {
             Just(Operator::Assign),
             Just(Operator::Gt),
         ]
+    }
+
+    fn arb_size() -> impl Strategy<Value = Size> {
+        prop_oneof![
+            Just(Size::Eight),
+            Just(Size::Sixteen),
+            Just(Size::ThirtyTwo),
+            Just(Size::SixtyFour),
+        ]
+    }
+
+    fn arb_type() -> impl Strategy<Value = Type> {
+        let leaf = prop_oneof![
+            arb_size().prop_map(Type::Signed),
+            arb_size().prop_map(Type::Unsigned),
+            arb_size().prop_map(Type::Float),
+            Just(Type::Bool),
+            Just(Type::Char),
+        ];
+        leaf.prop_recursive(3, 12, 5, |inner| {
+            prop_oneof![
+                prop::collection::vec(inner.clone(), 1..4).prop_map(|seq| Type::Tuple(seq)),
+                (inner.clone(), any::<u64>())
+                    .prop_map(|(ty, size)| Type::Array(Box::new(ty), size)),
+                (prop::collection::vec(inner.clone(), 1..4), inner.clone()).prop_map(
+                    |(args, ret)| Type::Function {
+                        args,
+                        ret: Box::new(ret)
+                    }
+                ),
+            ]
+        })
+    }
+
+    fn arb_opt_type() -> impl Strategy<Value = Option<Type>> {
+        prop_oneof![Just(None), arb_type().prop_map(Some)]
     }
 
     fn arb_expr() -> impl Strategy<Value = Expression> {
@@ -33,18 +69,20 @@ mod tests {
                         rhs: Box::new(rhs),
                     }
                 }),
-                ("[A-Z][a-zA-Z0-9]*", inner.clone()).prop_map(|(name, value)| {
-                    Expression::Var {
-                        name,
-                        value: Box::new(value),
-                    }
-                }),
-                ("[A-Z][a-zA-Z0-9]*", inner.clone()).prop_map(|(name, value)| {
-                    Expression::Let {
-                        name,
-                        value: Box::new(value),
-                    }
-                }),
+                (
+                    "[A-Z][a-zA-Z0-9]*",
+                    arb_opt_type(),
+                    inner.clone(),
+                    any::<bool>()
+                )
+                    .prop_map(|(name, ty, value, mutable)| {
+                        Expression::Let {
+                            name,
+                            ty,
+                            value: Box::new(value),
+                            mutable,
+                        }
+                    }),
                 (
                     inner.clone(),
                     prop::collection::vec(inner.clone(), 1..10).prop_map(|seq| Sequence(seq)),

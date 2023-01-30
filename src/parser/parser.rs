@@ -36,9 +36,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
         Number(n) => Exp::Number(n),
         Name(x) => Exp::Reference(x),
         Keyword(If) => {
-            expect!(scan, Delim('('))?; // (
             let cond = Box::new(parse_expr(scan, 0)?);
-            expect!(scan, Delim(')'))?; // )
             expect!(scan, Delim('{'))?; // {
             let then = parse_seq(scan)?;
             expect!(scan, Delim('}'))?; // }
@@ -58,11 +56,18 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             let name = scan.next()?.name()?;
             expect!(scan, Op(x) if let ['='] == x[..])?;
             let value = Box::new(parse_expr(scan, 0)?);
-            match key {
-                Let => Exp::Let { name, value },
-                Var => Exp::Var { name, value },
+            let mutable = match key {
+                Let => true,
+                Var => false,
                 _ => Err(Error::UnexpectedToken("".into(), tok))?,
-            }
+            };
+            Exp::Let {
+                    name,
+                    value,
+                    ty: None,
+                    mutable,
+                }
+               
         }
         Delim('(') => {
             let expr = parse_expr(scan, 0)?;
@@ -103,32 +108,7 @@ pub fn parse_seq(scan: &mut Scanner) -> Result<Seq, Error> {
 
 pub fn parse(src: &str) -> Result<Seq, Error> {
     let scan = &mut Scanner::new(src);
-    let expr = parse_seq(scan).map_err(|e| {
-        match e {
-            Error::UnexpectedToken(s, tok) => {
-                let pos = tok.pos;
-                // Figure out the line and column of the error
-                let line = src[..pos].lines().count();
-                let col = src[..pos].lines().last().unwrap().len();
-                // Print the line with the error
-                let line = src.lines().nth(line - 1).unwrap();
-                let line = format!("{}", line.bright_yellow());
-                // Print a caret under the error
-                println!(
-                    "{}\n{}\n",
-                    line,
-                    format!(
-                        "{}{}{}",
-                        " ".repeat(col),
-                        "^".bright_red(),
-                        format!(" {}", s).yellow()
-                    )
-                );
-                Error::UnexpectedToken(s, tok)
-            }
-            _ => e,
-        }
-    })?;
+    let expr = parse_seq(scan)?;
     // Expect EOF
     expect!(scan, EOF)?;
     let prgm = expr;
