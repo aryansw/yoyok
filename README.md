@@ -13,4 +13,5 @@ x
 - Parser
   - Function Declarations
   - Function Calls
-  - While Loops (?)
+  - While Loops
+  - Unary and Binary Operators

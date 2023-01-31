@@ -2,97 +2,6 @@ use std::fmt::Display;
 
 use super::ast::{Expression, Function, Operator, Program, Sequence, Size, Type, Value};
 
-impl Expression {
-    fn display(&self, idt: i32) -> String {
-        match self {
-            Self::Value(v) => format!("{}", v),
-            Self::Reference(s) => format!("{}", s),
-            Self::Binary { lhs, op, rhs } => match op {
-                Operator::Assign => {
-                    format!("{} {} {}", lhs.display(idt), op, rhs.display(idt))
-                }
-                _ => format!("({} {} {})", lhs.display(idt), op, rhs.display(idt)),
-            },
-            Self::Tuple(v) => {
-                // If it's one element, then we need to add a comma to make it a tuple
-                if v.len() == 1 {
-                    return format!("({},)", v[0].display(idt));
-                }
-                let mut s = String::new();
-                let mut it = v.iter().peekable();
-                while let Some(expr) = it.next() {
-                    if it.peek().is_none() {
-                        s.push_str(&expr.display(idt));
-                    } else {
-                        s.push_str(&format!("{}, ", expr.display(idt)));
-                    }
-                }
-                format!("({})", s)
-            }
-            Self::Array(v) => {
-                let mut s = String::new();
-                let mut it = v.iter().peekable();
-                while let Some(expr) = it.next() {
-                    if it.peek().is_none() {
-                        s.push_str(&expr.display(idt));
-                    } else {
-                        s.push_str(&format!("{}, ", expr.display(idt)));
-                    }
-                }
-                format!("[{}]", s)
-            }
-            Self::Let {
-                name,
-                ty,
-                value,
-                mutable,
-            } => {
-                let var = if *mutable { "var" } else { "let" };
-                match ty {
-                    Some(ty) => format!("{} {}: {} = {}", var, name, ty, value.display(idt)),
-                    None => format!("{} {} = {}", var, name, value.display(idt)),
-                }
-            }
-            Self::If { cond, then, else_ } => {
-                let idt = idt + 2;
-                let then = apply_indent(then.display(idt), 2);
-                let else_ = else_.as_ref().map(|e| apply_indent(e.display(idt), 2));
-                match else_ {
-                    Some(e) => format!("if {} {{\n{}}}\nelse {{\n{}}}", cond.display(idt), then, e),
-                    None => format!("if {} {{\n{}}}", cond.display(idt), then),
-                }
-            }
-            Self::Call { func, args } => {
-                let mut s = String::new();
-                let mut it = args.iter().peekable();
-                while let Some(expr) = it.next() {
-                    if it.peek().is_none() {
-                        s.push_str(&expr.display(idt));
-                    } else {
-                        s.push_str(&format!("{}, ", expr.display(idt)));
-                    }
-                }
-                format!("{}({})", func.display(idt), s)
-            }
-        }
-    }
-}
-
-impl Sequence {
-    fn display(&self, idt: i32) -> String {
-        let mut s = String::new();
-        let mut it = self.0.iter().peekable();
-        while let Some(expr) = it.next() {
-            if it.peek().is_none() {
-                s.push_str(&expr.display(idt));
-            } else {
-                s.push_str(&format!("{};\n", expr.display(idt)));
-            }
-        }
-        s
-    }
-}
-
 impl Display for Program {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.iter().try_for_each(|func| write!(f, "{}", func))
@@ -107,7 +16,7 @@ impl Display for Function {
             .map(|(name, ty)| format!("{}: {}", name, ty))
             .collect::<Vec<String>>()
             .join(", ");
-        let body = apply_indent(self.body.display(2), 2);
+        let body = apply_indent(format!("{}", self.body), 2);
         write!(
             f,
             "fn {}({}) -> {} {{\n{}}}",
@@ -118,13 +27,91 @@ impl Display for Function {
 
 impl Display for Sequence {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.display(0))
+        let mut it = self.0.iter().peekable();
+        while let Some(expr) = it.next() {
+            if it.peek().is_none() {
+                write!(f, "{}", &expr)?;
+            } else {
+                write!(f, "{};\n", expr)?;
+            }
+        }
+        Ok(())
     }
 }
 
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.display(0))
+        match self {
+            Self::Value(v) => write!(f, "{}", v),
+            Self::Reference(s) => write!(f, "{}", s),
+            Self::Binary { lhs, op, rhs } => match op {
+                Operator::Assign => {
+                    write!(f, "{} {} {}", lhs, op, rhs)
+                }
+                _ => write!(f, "({} {} {})", lhs, op, rhs),
+            },
+            Self::Tuple(v) => {
+                // If it's one element, then we need to add a comma to make it a tuple
+                if v.len() == 1 {
+                    write!(f, "({},)", v[0])
+                } else {
+                    write!(f, "(")?;
+                    let mut it = v.iter().peekable();
+                    while let Some(expr) = it.next() {
+                        if it.peek().is_none() {
+                            write!(f, "{}", expr)?;
+                        } else {
+                            write!(f, "{}, ", expr)?;
+                        }
+                    }
+                    write!(f, ")")
+                }
+            }
+            Self::Array(v) => {
+                write!(f, "[")?;
+                let mut it = v.iter().peekable();
+                while let Some(expr) = it.next() {
+                    if it.peek().is_none() {
+                        write!(f, "{}", expr)?;
+                    } else {
+                        write!(f, "{}, ", expr)?;
+                    }
+                }
+                write!(f, "]")
+            }
+            Self::Let {
+                name,
+                ty,
+                value,
+                mutable,
+            } => {
+                let var = if *mutable { "var" } else { "let" };
+                match ty {
+                    Some(ty) => write!(f, "{} {}: {} = {}", var, name, ty, value),
+                    None => write!(f, "{} {} = {}", var, name, value),
+                }
+            }
+            Self::If { cond, then, else_ } => {
+                let then = apply_indent(format!("{}", then), 2);
+                let else_ = else_.as_ref().map(|e| apply_indent(format!("{}", e), 2));
+                match else_ {
+                    Some(e) => write!(f, "if {} {{\n{}}}\nelse {{\n{}}}", cond, then, e),
+                    None => write!(f, "if {} {{\n{}}}", cond, then),
+                }
+            }
+            Self::Call { func, args } => {
+                write!(f, "{}(", func)?;
+                let mut it = args.iter().peekable();
+                while let Some(expr) = it.next() {
+                    if it.peek().is_none() {
+                        write!(f, "{}", expr)?;
+                    } else {
+                        write!(f, "{}, ", expr)?;
+                    }
+                }
+                write!(f, ")")
+            }
+        }
     }
 }
 
