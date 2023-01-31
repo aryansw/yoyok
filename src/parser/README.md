@@ -14,7 +14,7 @@
          | <type> -> <type>         // function
 <value> ::= <num>
          | 'true' | 'false'
-         | \' <char> \'
+         | ' <char> '
          | " <string> "
 <expr> ::= <expr> [ <op> <expr> ]+
          | '(' <expr> ')'
@@ -24,8 +24,9 @@
          | let <ident> [: <type>] '=' <expr>
          | var <ident> [: <type>] '=' <expr>
          | if <expr> '{' <seq> '}' else '{' <seq> '}'
+<fun>  ::= fn <ident> '(' [<ident> ':' <type> ',']* ')' ['->' <type>]? '{' <seq> '}'
 <seq>  ::= | [<expr> ';']* <expr>
-<prgm> ::= <seq>
+<prgm> ::= <fun>+
 ```
 
 TODO: To split up the grammar into multiple "groups"

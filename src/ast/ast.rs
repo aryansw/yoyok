@@ -1,6 +1,17 @@
 use crate::parser::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Program(pub Vec<Function>);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Function {
+    pub name: String,
+    pub args: Vec<(String, Type)>,
+    pub ret: Type,
+    pub body: Sequence,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Sequence(pub Vec<Expression>);
 
 // TODO: It might be worth making this generic over the type of the expression,

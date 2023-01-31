@@ -55,6 +55,7 @@ pub enum Keyword {
     Else,
     True,
     False,
+    Func,
 }
 
 impl TokenType {
@@ -72,6 +73,7 @@ impl Into<Keyword> for String {
             "else" => Keyword::Else,
             "true" => Keyword::True,
             "false" => Keyword::False,
+            "fn" => Keyword::Func,
             _ => panic!("Invalid keyword"),
         }
     }

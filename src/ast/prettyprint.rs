@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::ast::{Expression, Operator, Sequence, Size, Type, Value};
+use super::ast::{Expression, Function, Operator, Program, Sequence, Size, Type, Value};
 
 impl Expression {
     fn display(&self, idt: i32) -> String {
@@ -78,6 +78,29 @@ impl Sequence {
             }
         }
         s
+    }
+}
+
+impl Display for Program {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.iter().try_for_each(|func| write!(f, "{}", func))
+    }
+}
+
+impl Display for Function {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let args = self
+            .args
+            .iter()
+            .map(|(name, ty)| format!("{}: {}", name, ty))
+            .collect::<Vec<String>>()
+            .join(", ");
+        let body = apply_indent(self.body.display(2), 2);
+        write!(
+            f,
+            "fn {}({}) -> {} {{\n{}}}",
+            self.name, args, self.ret, body
+        )
     }
 }
 
