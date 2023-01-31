@@ -62,6 +62,18 @@ impl Expression {
                     None => format!("if {} {{\n{}}}", cond.display(idt), then),
                 }
             }
+            Self::Call { func, args } => {
+                let mut s = String::new();
+                let mut it = args.iter().peekable();
+                while let Some(expr) = it.next() {
+                    if it.peek().is_none() {
+                        s.push_str(&expr.display(idt));
+                    } else {
+                        s.push_str(&format!("{}, ", expr.display(idt)));
+                    }
+                }
+                format!("{}({})", func.display(idt), s)
+            }
         }
     }
 }

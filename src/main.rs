@@ -1,4 +1,3 @@
-#![allow(unused)]
 // Cool features
 #![feature(let_chains)]
 #![feature(assert_matches)]
@@ -7,15 +6,12 @@
 use std::fs;
 
 use crate::error::Error;
-use ::log::{debug, info};
+use ::log::info;
 use anyhow::Context;
 use clap::Parser;
 use colored::Colorize;
 use parser::parser::parse;
-use proptest::{
-    prelude,
-    test_runner::{Config, TestCaseError, TestRunner},
-};
+use proptest::test_runner::{Config, TestCaseError, TestRunner};
 
 // Modules
 mod ast;
@@ -46,8 +42,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             cases: 1,
             ..Default::default()
         });
-        let ast_strat = ast::proptest::arb_seq();
-        let result = runner.run(&ast_strat, |ast| {
+        let ast_strat = ast::proptest::arb_prgm();
+        runner.run(&ast_strat, |ast| {
             run_str(format!("{}", ast).as_str()).map_err(|err| TestCaseError::Fail(err.into()))
         })?;
     };

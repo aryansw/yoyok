@@ -186,6 +186,34 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
         _ => Err(Error::UnexpectedToken("".into(), tok))?,
     };
 
+    
+    // Function Application 
+    loop {
+        if let Delim('(') = scan.peek()?.token {
+            scan.next()?; // (
+            let mut args = vec![];
+            loop {
+                if let Delim(')') = scan.peek()?.token {
+                    scan.next()?; // )
+                    break;
+                }
+                args.push(parse_expr(scan, 0)?);
+                if let Delim(',') = scan.peek()?.token {
+                    scan.next()?; // ,
+                } else {
+                    expect!(scan, Delim(')'))?;
+                    break;
+                }
+            }
+            expr = Exp::Call {
+                func: Box::new(expr),
+                args,
+            };
+        } else {
+            break;
+        }
+    }
+
     // Operator Parsing (with Precedence Climbing)
     loop {
         let op = match scan.peek()?.token {
@@ -229,6 +257,12 @@ pub fn parse_func(scan: &mut Scanner) -> Result<Function, Error> {
         expect!(scan, Delim(':'))?;
         let ty = parse_type(scan)?;
         args.push((name, ty));
+        if let Delim(',') = scan.peek()?.token {
+            scan.next()?;
+        } else {
+            expect!(scan, Delim(')'))?;
+            break;
+        }
     }
     let ret = if let Op(x) = scan.peek()?.token && let ['-', '>'] = x[..] {
         scan.next()?;

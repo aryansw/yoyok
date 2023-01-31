@@ -38,6 +38,10 @@ pub enum Expression {
         then: Sequence,
         else_: Option<Sequence>,
     },
+    Call {
+        func: Box<Expression>,
+        args: Vec<Expression>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]

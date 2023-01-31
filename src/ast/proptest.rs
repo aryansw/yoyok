@@ -1,9 +1,8 @@
 use proptest::{option, prelude::*};
 
-use crate::{
-    ast::ast::{Expression, Operator, Sequence, Size, Type, Value},
-    parser::parser::parse,
-};
+use crate::ast::ast::{Expression, Operator, Sequence, Size, Type, Value};
+
+use super::ast::{Function, Program};
 fn arb_operator() -> impl Strategy<Value = Operator> {
     prop_oneof![
         Just(Operator::Add),
@@ -93,17 +92,54 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
                 }),
             prop::collection::vec(inner.clone(), 0..10).prop_map(Expression::Array),
             prop::collection::vec(inner.clone(), 0..10).prop_map(Expression::Tuple),
+            (inner.clone(), prop::collection::vec(inner.clone(), 0..10)).prop_map(
+                |(func, args)| {
+                    Expression::Call {
+                        func: Box::new(func),
+                        args,
+                    }
+                }
+            ),
         ]
     })
 }
 
-pub fn arb_seq() -> impl Strategy<Value = Sequence> {
+fn arb_seq() -> impl Strategy<Value = Sequence> {
     prop::collection::vec(arb_expr(), 1..10).prop_map(|seq| Sequence(seq))
+}
+
+fn arb_func() -> impl Strategy<Value = Function> {
+    // name, args, ret and body
+    (
+        "[A-Z][a-zA-Z0-9]*",
+        (
+            prop::collection::vec("[A-Z][a-zA-Z0-9]*", 1..10),
+            arb_type(),
+        )
+            .prop_map(|(names, ty)| {
+                names
+                    .into_iter()
+                    .map(|name| (name, ty.clone()))
+                    .collect::<Vec<_>>()
+            }),
+        arb_type(),
+        arb_seq(),
+    )
+        .prop_map(|(name, args, ret, body)| Function {
+            name,
+            args,
+            ret,
+            body,
+        })
+}
+
+pub fn arb_prgm() -> impl Strategy<Value = Program> {
+    prop::collection::vec(arb_func(), 1..10).prop_map(Program)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{ast::proptest::arb_seq, parse};
+    use crate::{ast::proptest::arb_prgm, parse};
     use colored::Colorize;
     use proptest::prelude::*;
 
@@ -111,8 +147,8 @@ mod tests {
         // Any generated AST should be parsable (i.e. round-trip)
         #![proptest_config(ProptestConfig::with_cases(1024))]
         #[test]
-        fn proptest_parse(expr in arb_seq()){
-            let src = format!("{}", expr);
+        fn proptest_parse(prgm in arb_prgm()){
+            let src = format!("{}", prgm);
             let _parse = parse(&src).inspect_err(|_e| println!("\n{}\n{}", format!("Test input:").bright_red(), src))?;
         }
 
@@ -121,8 +157,8 @@ mod tests {
     proptest! {
         #![proptest_config(ProptestConfig::with_cases(1024))]
         #[test]
-        fn proptest_parse2(expr in arb_seq()){
-            let ast = parse(&format!("{}", expr))?;
+        fn proptest_parse2(prgm in arb_prgm()){
+            let ast = parse(&format!("{}", prgm))?;
             // Round-trip (ignore first one because it is not guaranteed to be the same)
             let ast1 = parse(&format!("{}", ast))?;
             let ast2 = parse(&format!("{}", ast1))?;

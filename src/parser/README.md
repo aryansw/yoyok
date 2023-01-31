@@ -24,6 +24,7 @@
          | let <ident> [: <type>] '=' <expr>
          | var <ident> [: <type>] '=' <expr>
          | if <expr> '{' <seq> '}' else '{' <seq> '}'
+         | <expr> ( [<expr> ',']* )
 <fun>  ::= fn <ident> '(' [<ident> ':' <type> ',']* ')' ['->' <type>]? '{' <seq> '}'
 <seq>  ::= | [<expr> ';']* <expr>
 <prgm> ::= <fun>+
@@ -42,9 +43,11 @@ y
 Most of the parsing testing is actually done using proptest, see ![proptest](../ast/proptest.rs).
 
 - These tests ensure the parser can parse any valid AST that's generated and presented using ![prettyprint](../ast/prettyprint.rs).
+- The proptest also checks that the parsed AST is consistent with the AST produced by prettyprint.
 
+To see a single sample, try:
 ```
-> cargo run -- -r -v
+> cargo run -- -v
 ```
 
 ## Helpful Resources

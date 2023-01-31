@@ -1,4 +1,4 @@
-fn main() {
+fn main(x: i32, y: i32) -> i32 {
   let x = (30 * (45 - 233));
   var y = (322 + 22);
   let z = (24 + 45);
@@ -6,6 +6,8 @@ fn main() {
   let r = [];
   let q = "hello world this \r is amazing";
   let f = '\n';
+  let rrt = f(345)(456);
+  let g = app(45, x, q + 3545) + 456;
   if (z > 100) {
     z = 100;
     tr = (y + 345);
