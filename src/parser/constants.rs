@@ -1,7 +1,7 @@
 /// Constants used by the parser
 const DELIMS: [char; 9] = [';', ':', ',', '(', ')', '{', '}', '[', ']'];
 const KEYWORDS: [&str; 8] = ["let", "var", "if", "else", "true", "false", "fn", "while"];
-const OPERATORS: [char; 6] = ['+', '-', '*', '/', '=', '>'];
+const OPERATORS: [char; 10] = ['+', '-', '*', '/', '=', '>', '<', '&', '!', '|'];
 const COMMENT: char = '#';
 
 pub fn is_comment(c: char) -> bool {

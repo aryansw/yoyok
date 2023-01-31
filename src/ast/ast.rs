@@ -18,6 +18,10 @@ pub struct Sequence(pub Vec<Expression>);
 // so types can initially be optional, and then be inferred later.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
+    Unary {
+        op: Operator,
+        rhs: Box<Expression>,
+    },
     Binary {
         lhs: Box<Expression>,
         op: Operator,
@@ -57,16 +61,6 @@ pub enum Value {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Operator {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Assign,
-    Gt,
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Signed(Size),
     Unsigned(Size),
@@ -92,6 +86,24 @@ impl Type {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operator {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Assign,
+    Gt,
+    Lt,
+    Lte,
+    Gte,
+    Eq,
+    Neq,
+    And,
+    Or,
+    Not,
+}
+
 impl Operator {
     pub fn from(op: &[char]) -> Result<Self, Error> {
         Ok(match op {
@@ -101,22 +113,86 @@ impl Operator {
             ['/'] => Operator::Div,
             ['='] => Operator::Assign,
             ['>'] => Operator::Gt,
+            ['<'] => Operator::Lt,
+            ['<', '='] => Operator::Lte,
+            ['>', '='] => Operator::Gte,
+            ['=', '='] => Operator::Eq,
+            ['!', '='] => Operator::Neq,
+            ['&', '&'] => Operator::And,
+            ['|', '|'] => Operator::Or,
+            ['!'] => Operator::Not,
             _ => return Err(Error::InvalidOperator(op.iter().collect())),
         })
     }
 
+    fn is_binary(&self) -> bool {
+        match self {
+            Self::Not => false,
+            _ => true,
+        }
+    }
+
+    fn is_unary(&self) -> bool {
+        match self {
+            Self::Not | Self::Sub => true,
+            _ => false,
+        }
+    }
+
+    pub fn expect_binary(&self) -> Result<(), Error> {
+        if self.is_binary() {
+            Ok(())
+        } else {
+            Err(Error::InvalidOperator(format!("{:?}", self)))
+        }
+    }
+
+    pub fn expect_unary(&self) -> Result<(), Error> {
+        if self.is_unary() {
+            Ok(())
+        } else {
+            Err(Error::InvalidOperator(format!("{:?}", self)))
+        }
+    }
+
     pub fn prec(&self) -> u8 {
         match self {
+            Self::Not => 0,
             Self::Add | Self::Sub => 1,
             Self::Mul | Self::Div => 2,
-            Self::Assign | Self::Gt => 3,
+            x if x.is_comparison() => 3,
+            x if x.is_logical() => 4,
+            Self::Assign | _ => 5,
         }
     }
 
     pub fn assoc(&self) -> u8 {
         match self {
-            Self::Add | Self::Sub | Self::Mul | Self::Div => 1,
-            Self::Assign | Self::Gt => 0,
+            x if x.is_arith() => 1,
+            x if x.is_comparison() => 1,
+            x if x.is_logical() => 1,
+            Self::Assign | _ => 0,
+        }
+    }
+
+    pub fn is_arith(&self) -> bool {
+        match self {
+            Self::Add | Self::Sub | Self::Mul | Self::Div => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_comparison(&self) -> bool {
+        match self {
+            Self::Gt | Self::Lt | Self::Lte | Self::Gte | Self::Eq | Self::Neq => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_logical(&self) -> bool {
+        match self {
+            Self::And | Self::Or | Self::Not => true,
+            _ => false,
         }
     }
 }

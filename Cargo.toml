@@ -22,5 +22,5 @@ proptest = "1.0.0"
 [profile.test]
 opt-level = 3
 overflow-checks = true
-lto = "thin"
+lto = false
 incremental = true

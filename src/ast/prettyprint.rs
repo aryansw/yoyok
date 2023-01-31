@@ -44,6 +44,7 @@ impl Display for Expression {
         match self {
             Self::Value(v) => write!(f, "{}", v),
             Self::Reference(s) => write!(f, "{}", s),
+            Self::Unary { op, rhs } => write!(f, "({}{})", op, rhs),
             Self::Binary { lhs, op, rhs } => match op {
                 Operator::Assign => {
                     write!(f, "{} {} {}", lhs, op, rhs)
@@ -139,6 +140,14 @@ impl Display for Operator {
             Operator::Div => write!(f, "/"),
             Operator::Assign => write!(f, "="),
             Operator::Gt => write!(f, ">"),
+            Operator::Lt => write!(f, "<"),
+            Operator::Gte => write!(f, ">="),
+            Operator::Lte => write!(f, "<="),
+            Operator::Eq => write!(f, "=="),
+            Operator::Neq => write!(f, "!="),
+            Operator::And => write!(f, "&&"),
+            Operator::Or => write!(f, "||"),
+            Operator::Not => write!(f, "!"),
         }
     }
 }

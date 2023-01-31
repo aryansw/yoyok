@@ -102,6 +102,15 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
     let tok = scan.next()?;
 
     let mut expr = match tok.token {
+        Op(x) => {
+            let op = Operator::from(&x)?;
+            op.expect_unary()?;
+            let rhs = Box::new(parse_expr(scan, _min)?);
+            Exp::Unary {
+                op,
+                rhs,
+            }
+        }
         Number(x)  => Exp::Value(x.into()),
         Literal(x) => Exp::Value(x.into()),
         Name(x) => Exp::Reference(x),
@@ -230,6 +239,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             }
             _ => break,
         };
+        op.expect_binary()?;
         let rhs = parse_expr(scan, op.prec() + op.assoc())?;
         expr = Exp::Binary {
             lhs: Box::new(expr),

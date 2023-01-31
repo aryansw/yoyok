@@ -3,15 +3,27 @@ use proptest::{option, prelude::*};
 use crate::ast::ast::{Expression, Operator, Sequence, Size, Type, Value};
 
 use super::ast::{Function, Program};
-fn arb_operator() -> impl Strategy<Value = Operator> {
+
+fn arb_binary() -> impl Strategy<Value = Operator> {
     prop_oneof![
         Just(Operator::Add),
         Just(Operator::Sub),
         Just(Operator::Mul),
         Just(Operator::Div),
+        Just(Operator::And),
+        Just(Operator::Or),
         Just(Operator::Assign),
+        Just(Operator::Eq),
+        Just(Operator::Neq),
+        Just(Operator::Lt),
+        Just(Operator::Lte),
         Just(Operator::Gt),
+        Just(Operator::Gte),
     ]
+}
+
+fn arb_unary() -> impl Strategy<Value = Operator> {
+    prop_oneof![Just(Operator::Not), Just(Operator::Sub)]
 }
 
 fn arb_size() -> impl Strategy<Value = Size> {
@@ -57,7 +69,11 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
     ];
     leaf.prop_recursive(12, 512, 12, |inner| {
         prop_oneof![
-            (inner.clone(), arb_operator(), inner.clone()).prop_map(|(lhs, op, rhs)| {
+            (arb_unary(), inner.clone()).prop_map(|(op, rhs)| Expression::Unary {
+                op,
+                rhs: Box::new(rhs)
+            }),
+            (inner.clone(), arb_binary(), inner.clone()).prop_map(|(lhs, op, rhs)| {
                 Expression::Binary {
                     lhs: Box::new(lhs),
                     op,
