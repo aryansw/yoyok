@@ -37,7 +37,6 @@ pub enum Value {
     String(String),
 }
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
     Add,
@@ -116,7 +115,6 @@ impl TryInto<Size> for u8 {
         })
     }
 }
-
 
 impl Into<Value> for u64 {
     fn into(self) -> Value {

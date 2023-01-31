@@ -52,9 +52,9 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
     let leaf = prop_oneof![
         any::<u64>().prop_map(|x| Expression::Value(x.into())),
         "[A-Z][a-zA-Z0-9]*".prop_map(Expression::Reference),
-        any::<u64>().prop_map(|x| Expression::Value(x.into())),
+        any::<bool>().prop_map(|x| Expression::Value(x.into())),
         "[A-Z][a-zA-Z0-9]*".prop_map(|x| Expression::Value(Value::String(x))),
-        any::<char>().prop_map(|x| Expression::Value(Value::Char(x))),
+        "[A-Z][a-zA-Z0-9]+".prop_map(|x| Expression::Value(Value::Char(x.chars().next().unwrap()))),
     ];
     leaf.prop_recursive(12, 512, 10, |inner| {
         prop_oneof![
@@ -81,8 +81,8 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
                 }),
             (
                 inner.clone(),
-                prop::collection::vec(inner.clone(), 1..10).prop_map(|seq| Sequence(seq)),
-                prop::collection::vec(inner.clone(), 1..10).prop_map(|seq| Sequence(seq))
+                prop::collection::vec(inner.clone(), 1..10).prop_map(Sequence),
+                prop::collection::vec(inner.clone(), 1..10).prop_map(Sequence)
             )
                 .prop_map(|(cond, then, else_)| {
                     Expression::If {
@@ -91,6 +91,8 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
                         else_: Some(else_),
                     }
                 }),
+            prop::collection::vec(inner.clone(), 0..10).prop_map(Expression::Array),
+            prop::collection::vec(inner.clone(), 0..10).prop_map(Expression::Tuple),
         ]
     })
 }

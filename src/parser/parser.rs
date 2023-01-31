@@ -142,9 +142,46 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             }
         }
         Delim('(') => {
-            let expr = parse_expr(scan, 0)?;
-            expect!(scan, Delim(')'))?;
-            expr
+            // 1. If we see a ')' right after a '(', it's a tuple with no elements
+            if let Delim(')') = scan.peek()?.token {
+                scan.next()?; // )
+                Exp::Tuple(vec![])
+            } else {
+                let expr = parse_expr(scan, 0)?;
+                // 2. If we parse an expr, and then see a ',', it's a tuple with one or more elements
+                if let Delim(',') = scan.peek()?.token {
+                    let mut exprs = vec![expr];
+                    while let Delim(',') = scan.peek()?.token {
+                        scan.next()?; // 
+                        // Handle single element tuples
+                        if let Delim(')') = scan.peek()?.token {
+                            break;
+                        }
+                        exprs.push(parse_expr(scan, 0)?);
+                    }
+                    expect!(scan, Delim(')'))?;
+                    Exp::Tuple(exprs)
+                } else {
+                // 3. If we parse an expr, and then only see a ')', it's a parenthesized expression
+                    expect!(scan, Delim(')'))?;
+                    expr
+                }
+            }
+        }
+        Delim('[') => {
+            if let Delim(']') = scan.peek()?.token {
+                scan.next()?; // ]
+                Exp::Array(vec![])
+            } else {
+                let mut exprs = vec![];
+                exprs.push(parse_expr(scan, 0)?);
+                while let Delim(',') = scan.peek()?.token {
+                    scan.next()?; // ,
+                    exprs.push(parse_expr(scan, 0)?);
+                }
+                expect!(scan, Delim(']'))?;
+                Exp::Array(exprs)
+            }
         }
         _ => Err(Error::UnexpectedToken("".into(), tok))?,
     };

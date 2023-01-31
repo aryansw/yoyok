@@ -1,8 +1,9 @@
 let x = (30 * (45 - 233));
 var y = (322 + 22);
 let z = (24 + 45);
-let q = "hello ee";
-let w = '\';
+let q = (23, 45);
+let r = [];
+let q = (() + 10);
 if (z > 100) {
   z = 100;
   tr = (y + 345);

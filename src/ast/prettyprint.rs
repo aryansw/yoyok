@@ -14,6 +14,10 @@ impl Expression {
                 _ => format!("({} {} {})", lhs.display(idt), op, rhs.display(idt)),
             },
             Self::Tuple(v) => {
+                // If it's one element, then we need to add a comma to make it a tuple
+                if v.len() == 1 {
+                    return format!("({},)", v[0].display(idt));
+                }
                 let mut s = String::new();
                 let mut it = v.iter().peekable();
                 while let Some(expr) = it.next() {
