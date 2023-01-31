@@ -42,6 +42,10 @@ pub enum Expression {
         func: Box<Expression>,
         args: Vec<Expression>,
     },
+    While {
+        cond: Box<Expression>,
+        body: Sequence,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]

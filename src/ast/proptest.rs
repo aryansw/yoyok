@@ -55,7 +55,7 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
         "[A-Z][a-zA-Z0-9]*".prop_map(|x| Expression::Value(Value::String(x))),
         "[A-Z][a-zA-Z0-9]+".prop_map(|x| Expression::Value(Value::Char(x.chars().next().unwrap()))),
     ];
-    leaf.prop_recursive(12, 512, 10, |inner| {
+    leaf.prop_recursive(12, 512, 12, |inner| {
         prop_oneof![
             (inner.clone(), arb_operator(), inner.clone()).prop_map(|(lhs, op, rhs)| {
                 Expression::Binary {
@@ -100,6 +100,16 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
                     }
                 }
             ),
+            (
+                inner.clone(),
+                prop::collection::vec(inner.clone(), 1..10).prop_map(Sequence)
+            )
+                .prop_map(|(cond, body)| {
+                    Expression::While {
+                        cond: Box::new(cond),
+                        body,
+                    }
+                }),
         ]
     })
 }

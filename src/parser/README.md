@@ -44,11 +44,15 @@ Most of the parsing testing is actually done using proptest, see ![proptest](../
 
 - These tests ensure the parser can parse any valid AST that's generated and presented using ![prettyprint](../ast/prettyprint.rs).
 - The proptest also checks that the parsed AST is consistent with the AST produced by prettyprint.
+- This, at the very least, forces consistency between the parser and prettyprint.
 
 To see a single sample, try:
+
 ```
 > cargo run -- -v
 ```
+
+The programs generated are almost definitely not valid, but they are valid ASTs, and the parser should be able to parse them.
 
 ## Helpful Resources
 

@@ -95,7 +95,7 @@ impl Display for Expression {
                 let then = apply_indent(format!("{}", then), 2);
                 let else_ = else_.as_ref().map(|e| apply_indent(format!("{}", e), 2));
                 match else_ {
-                    Some(e) => write!(f, "if {} {{\n{}}}\nelse {{\n{}}}", cond, then, e),
+                    Some(e) => write!(f, "if {} {{\n{}}} else {{\n{}}}", cond, then, e),
                     None => write!(f, "if {} {{\n{}}}", cond, then),
                 }
             }
@@ -110,6 +110,10 @@ impl Display for Expression {
                     }
                 }
                 write!(f, ")")
+            }
+            Self::While { cond, body } => {
+                let body = apply_indent(format!("{}", body), 2);
+                write!(f, "while {} {{\n{}}}", cond, body)
             }
         }
     }

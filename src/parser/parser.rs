@@ -124,6 +124,13 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             Exp::If { cond, then, else_ }
         }
         Keyword(Else) => Err(Error::UnexpectedToken("".into(), tok))?,
+        Keyword(While) => {
+            let cond = Box::new(parse_expr(scan, 0)?);
+            expect!(scan, Delim('{'))?; // {
+            let body = parse_seq(scan)?;
+            expect!(scan, Delim('}'))?; // }
+            Exp::While { cond, body }
+        }
         Keyword(ref key) => {
             let name = scan.next()?.name()?;
             let ty = parse_opt_type(scan)?;
@@ -233,11 +240,15 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
     Ok(expr)
 }
 
-// As long as we see a semicolon, there's a sequence of expressions
+// As long as we see a semicolon, there's another expression
 pub fn parse_seq(scan: &mut Scanner) -> Result<Seq, Error> {
     let mut exprs = vec![parse_expr(scan, 0)?];
     while matches!(scan.peek()?.token, Delim(';')) {
         scan.next()?;
+        // Handle cases where there's a trailing semicolon
+        if matches!(scan.peek()?.token, Delim('}')) {
+            break;
+        }
         exprs.push(parse_expr(scan, 0)?);
     }
     Ok(Seq(exprs))

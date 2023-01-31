@@ -3,15 +3,35 @@
 Unsurprisingly similar syntax to Rust.
 
 ```
-let x = 5 + 45;
-var y: i32 = 45 + 34;
-x
+fn main() -> i32 {
+  let x = 5 + 1199;
+  var y: i32 = if x < 0 {
+      0
+  } else {
+      1
+  };
+  while y < x {
+      y = y + 1;
+  };
+  x
+}
 ```
 
-## TODOs:
+## Documentation
 
-- Parser
-  - Function Declarations
-  - Function Calls
-  - While Loops
-  - Unary and Binary Operators
+- Parser: [src/parser/README.md](src/parser/README.md)
+- AST: [src/ast/ast.rs](src/ast/ast.rs)
+
+## Running
+
+```
+cargo run -- examples/comments.yk -v
+```
+
+## Testing
+
+By default, the tests are run in release mode, so that the tests run faster.
+
+```
+cargo test
+```
