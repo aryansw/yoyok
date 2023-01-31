@@ -52,8 +52,11 @@ impl<'a> Scanner<'a> {
             Some(c) if is_operator(c) => Ok(Op(self.next_op()?)),
             Some(c) if c == '\'' => {
                 self.next_char();
-                // TODO: Handle escaped chars
-                let c = self.next_char().ok_or(Error::UnterminatedChar(pos))?;
+                let mut c = self.next_char().ok_or(Error::UnterminatedChar(pos))?;
+                if c == '\\' {
+                    c = self.next_char().ok_or(Error::UnterminatedChar(pos))?;
+                    c = Self::escape_char(c)?;
+                }
                 self.next_char()
                     .and_then(|c| if c == '\'' { Some(()) } else { None })
                     .ok_or(Error::UnterminatedChar(pos))?;
@@ -62,13 +65,18 @@ impl<'a> Scanner<'a> {
             Some(c) if c == '"' => {
                 self.next_char();
                 let mut string = String::new();
-                while let Some(c) = self.peek_char() && c != '"' {
+                while let Some(mut c) = self.peek_char() && c != '"' {
+                    if c == '\\' {
+                        self.next_char();
+                        c = self.peek_char().ok_or(Error::UnterminatedChar(pos))?;
+                        c = Self::escape_char(c)?;
+                    }
                     string.push(c);
                     self.next_char();
                 }
                 self.next_char()
                     .and_then(|c| if c == '"' { Some(()) } else { None })
-                    .ok_or(Error::UnterminatedString(pos))?;
+                    .ok_or(Error::UnterminatedChar(pos))?;
                 Ok(Literal(string.into()))
             }
             Some(c) if is_delim(c) => {
@@ -120,6 +128,19 @@ impl<'a> Scanner<'a> {
             self.pos += c.len_utf8();
             Some(c)
         }
+    }
+
+    fn escape_char(c: char) -> Parse<char> {
+        Ok(match c {
+            'n' => '\n',
+            't' => '\t',
+            'r' => '\r',
+            '0' => '\0',
+            '\'' => '\'',
+            '"' => '"',
+            '\\' => '\\',
+            _ => Err(Error::InvalidEscape(c))?,
+        })
     }
 
     fn peek_char(&self) -> Option<char> {

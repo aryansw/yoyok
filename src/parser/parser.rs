@@ -130,8 +130,8 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             expect!(scan, Op(x) if let ['='] == x[..])?;
             let value = Box::new(parse_expr(scan, 0)?);
             let mutable = match key {
-                Let => true,
-                Var => false,
+                Let => false,
+                Var => true,
                 _ => Err(Error::UnexpectedToken("Key or Let".into(), tok))?,
             };
             Exp::Let {

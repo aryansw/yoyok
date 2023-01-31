@@ -3,7 +3,8 @@ var y = (322 + 22);
 let z = (24 + 45);
 let q = (23, 45);
 let r = [];
-let q = (() + 10);
+let q = "hello world this \n is amazing";
+let f = '\n';
 if (z > 100) {
   z = 100;
   tr = (y + 345);

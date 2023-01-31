@@ -115,5 +115,18 @@ mod tests {
             let src = format!("{}", expr);
             let _parse = parse(&src).inspect_err(|_e| println!("\n{}\n{}", format!("Test input:").bright_red(), src))?;
         }
+
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(1024))]
+        #[test]
+        fn proptest_parse2(expr in arb_seq()){
+            let ast = parse(&format!("{}", expr))?;
+            // Round-trip (ignore first one because it is not guaranteed to be the same)
+            let ast1 = parse(&format!("{}", ast))?;
+            let ast2 = parse(&format!("{}", ast1))?;
+            prop_assert_eq!(ast1, ast2, "Round-trip failed");
+        }
     }
 }

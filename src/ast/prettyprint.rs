@@ -98,8 +98,8 @@ impl Display for Value {
         match self {
             Value::Number(x) => write!(f, "{}", x),
             Value::Bool(x) => write!(f, "{}", x),
-            Value::Char(x) => write!(f, "'{}'", x),
-            Value::String(x) => write!(f, "\"{}\"", x),
+            Value::Char(x) => write!(f, "'{}'", x.escape_default()),
+            Value::String(x) => write!(f, "\"{}\"", x.escape_default()),
         }
     }
 }
