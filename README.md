@@ -35,16 +35,3 @@ By default, the tests are run in release mode, so that the tests run faster.
 ```
 cargo test
 ```
-
-## Random Scribbles
-
-Concurrent ML
-
-- (Similar to Coroutines)
-- Asynchronous CML (Reasoned about Coroutine like Behaviour)
-  - Unbuffered accessing
-  - https://www.cs.purdue.edu/homes/suresh/papers/pldi11.pdf
-- Look at CML and ACML
-- Linear Types are important for Ownership (Affine-typing)
-  - Combinators: Linear Types for CML
-  - Type systems for Concurrent Programs
