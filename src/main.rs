@@ -8,14 +8,18 @@ use std::fs;
 use crate::error::Error;
 use ::log::info;
 use anyhow::Context;
+use anyhow::Error as AnyError;
 use clap::Parser;
 use colored::Colorize;
+use interpreter::run::run_program;
 use parser::parser::parse;
+use proptest::test_runner::Reason;
 use proptest::test_runner::{Config, TestCaseError, TestRunner};
 
 // Modules
 mod ast;
 mod error;
+mod interpreter;
 mod log;
 mod parser;
 
@@ -44,14 +48,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
         let ast_strat = ast::proptest::arb_prgm();
         runner.run(&ast_strat, |ast| {
-            run_str(format!("{}", ast).as_str()).map_err(|err| TestCaseError::Fail(err.into()))
+            run_str(format!("{}", ast).as_str()).map_err(|err| TestCaseError::Fail(into(err)))
         })?;
     };
     Ok(())
 }
 
 // Run program from string
-fn run_str(source: &str) -> Result<(), Error> {
-    let _ast = parse(source)?;
+fn run_str(source: &str) -> Result<(), AnyError> {
+    let ast = parse(source)?;
+    let res = run_program(ast)?;
     Ok(())
+}
+
+fn into(error: AnyError) -> Reason {
+    error.to_string().into()
 }
