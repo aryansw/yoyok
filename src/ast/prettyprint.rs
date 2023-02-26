@@ -155,8 +155,6 @@ impl Display for Operator {
 impl Display for Size {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Size::Eight => write!(f, "8"),
-            Size::Sixteen => write!(f, "16"),
             Size::ThirtyTwo => write!(f, "32"),
             Size::SixtyFour => write!(f, "64"),
         }
@@ -167,7 +165,6 @@ impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Type::Signed(size) => write!(f, "i{}", size),
-            Type::Unsigned(size) => write!(f, "u{}", size),
             Type::Float(size) => write!(f, "f{}", size),
             Type::Bool => write!(f, "bool"),
             Type::Char => write!(f, "char"),

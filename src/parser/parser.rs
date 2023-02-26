@@ -43,11 +43,10 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
         Name(ref x) => {
             // First check if the beginning is i, u, f
             let ty = match &x[..1] {
-                "i" | "u" | "f" => {
+                "i" | "f" => {
                     let size = x[1..].parse::<u8>()?.try_into()?;
                     match &x[..1] {
                         "i" => Type::Signed(size),
-                        "u" => Type::Unsigned(size),
                         "f" => Type::Float(size),
                         _ => unreachable!(),
                     }

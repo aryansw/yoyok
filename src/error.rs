@@ -1,5 +1,4 @@
 use crate::{interpreter::error::Error as InterpretError, parser::error::Error as ParserError};
-use proptest::test_runner::Reason;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

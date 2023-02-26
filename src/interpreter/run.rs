@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use anyhow::Context;
 
 use super::{error::Error, value::Value};
-use crate::ast::ast::{Expression as Expr, self};
 use crate::ast::ast::*;
+use crate::ast::ast::{self, Expression as Expr};
 use anyhow::Error as AnyError;
 
 type Env = HashMap<String, Value>;
@@ -104,19 +104,6 @@ impl Value {
                 Operator::Sub => Value::Signed(x - y),
                 Operator::Mul => Value::Signed(x * y),
                 Operator::Div => Value::Signed(x / y),
-                Operator::Gt => Value::Bool(x > y),
-                Operator::Lt => Value::Bool(x < y),
-                Operator::Gte => Value::Bool(x >= y),
-                Operator::Lte => Value::Bool(x <= y),
-                Operator::Eq => Value::Bool(x == y),
-                Operator::Neq => Value::Bool(x != y),
-                _ => Err(Error::InvalidBinary(op, self.type_of(), rhs.type_of()))?,
-            },
-            (Value::Unsigned(x), Value::Unsigned(y)) => match op {
-                Operator::Add => Value::Unsigned(x + y),
-                Operator::Sub => Value::Unsigned(x - y),
-                Operator::Mul => Value::Unsigned(x * y),
-                Operator::Div => Value::Unsigned(x / y),
                 Operator::Gt => Value::Bool(x > y),
                 Operator::Lt => Value::Bool(x < y),
                 Operator::Gte => Value::Bool(x >= y),

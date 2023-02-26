@@ -63,7 +63,6 @@ pub enum Value {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Signed(Size),
-    Unsigned(Size),
     Float(Size),
     Bool,
     Char,
@@ -74,8 +73,6 @@ pub enum Type {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Size {
-    Eight,
-    Sixteen,
     ThirtyTwo,
     SixtyFour,
 }
@@ -202,8 +199,6 @@ impl TryInto<Size> for u8 {
 
     fn try_into(self) -> Result<Size, Self::Error> {
         Ok(match self {
-            8 => Size::Eight,
-            16 => Size::Sixteen,
             32 => Size::ThirtyTwo,
             64 => Size::SixtyFour,
             _ => return Err(Error::InvalidSize(self)),

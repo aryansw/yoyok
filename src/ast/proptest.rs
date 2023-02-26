@@ -28,8 +28,6 @@ fn arb_unary() -> impl Strategy<Value = Operator> {
 
 fn arb_size() -> impl Strategy<Value = Size> {
     prop_oneof![
-        Just(Size::Eight),
-        Just(Size::Sixteen),
         Just(Size::ThirtyTwo),
         Just(Size::SixtyFour),
     ]
@@ -38,7 +36,6 @@ fn arb_size() -> impl Strategy<Value = Size> {
 fn arb_type() -> impl Strategy<Value = Type> {
     let leaf = prop_oneof![
         arb_size().prop_map(Type::Signed),
-        arb_size().prop_map(Type::Unsigned),
         arb_size().prop_map(Type::Float),
         Just(Type::Bool),
         Just(Type::Char),
