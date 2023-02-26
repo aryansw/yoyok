@@ -2,6 +2,7 @@ use itertools::Itertools;
 
 use crate::ast::ast::{Function, Size, Type};
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Signed(i64),
     Bool(bool),

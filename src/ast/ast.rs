@@ -63,7 +63,6 @@ pub enum Value {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Signed(Size),
-    Float(Size),
     Bool,
     Char,
     Tuple(Vec<Type>),

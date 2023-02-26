@@ -18,4 +18,10 @@ pub enum Error {
     InvalidUnary(Operator, Type),
     #[error("Invalid Operation: '{0}' on '{1}' and '{2}'")]
     InvalidBinary(Operator, Type, Type),
+    #[error("Undefined variable: '{0}'")]
+    UndefinedVariable(String),
+    #[error("Immutable variable: '{0}'")]
+    ImmutableVariable(String),
+    #[error("Undefined function: '{0}'")]
+    UndefinedFunction(String),
 }
