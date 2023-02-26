@@ -68,8 +68,8 @@ pub enum Type {
     Bool,
     Char,
     Tuple(Vec<Type>),
-    Array(Box<Type>, u64),
-    Function { args: Box<Type>, ret: Box<Type> },
+    Array(Box<Type>, usize),
+    Function { args: Vec<Type>, ret: Box<Type> },
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -182,7 +182,7 @@ impl Display for Type {
             }
             Type::Array(ty, size) => write!(f, "[{}; {}]", ty, size),
             Type::Function { args, ret } => {
-                write!(f, "{} -> {}", args, ret)
+                write!(f, "{} -> {}", Type::Tuple(args.to_vec()), ret)
             }
         }
     }

@@ -46,10 +46,12 @@ fn arb_type() -> impl Strategy<Value = Type> {
     leaf.prop_recursive(5, 22, 12, |inner| {
         prop_oneof![
             prop::collection::vec(inner.clone(), 1..4).prop_map(|seq| Type::Tuple(seq)),
-            (inner.clone(), any::<u64>()).prop_map(|(ty, size)| Type::Array(Box::new(ty), size)),
-            (inner.clone(), inner.clone()).prop_map(|(args, ret)| Type::Function {
-                args: Box::new(args),
-                ret: Box::new(ret)
+            (inner.clone(), any::<usize>()).prop_map(|(ty, size)| Type::Array(Box::new(ty), size)),
+            (prop::collection::vec(inner.clone(), 1..4), inner.clone()).prop_map(|(args, ret)| {
+                Type::Function {
+                    args: args,
+                    ret: Box::new(ret),
+                }
             }),
         ]
     })

@@ -56,7 +56,7 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
                     match x.as_str() {
                         "bool" => Type::Bool,
                         "char" => Type::Char,
-                        _ => Err(Error::InvalidType(tok))?
+                        _ => return Err(Error::InvalidType(tok))
                     }
                 },
             };
@@ -81,17 +81,21 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
             expect!(scan, Delim(';'))?;
             let size = scan.next()?.number()?;
             expect!(scan, Delim(']'))?;
-            Type::Array(Box::new(ty), size)
+            Type::Array(Box::new(ty), size as usize)
         }
-        _ => Err(Error::InvalidType(tok))?,
+        _ => return Err(Error::InvalidType(tok)),
     };
     if let Op(x) = scan.peek()?.token && let ['-', '>'] = x[..] {
         scan.next()?;
         let ret = parse_type(scan)?;
-        Ok(Type::Function {
-            args: Box::new(ty),
-            ret: Box::new(ret),
-        })
+        if let Type::Tuple(tys) = ty {
+            Ok(Type::Function {
+                args: tys,
+                ret: Box::new(ret),
+            })
+        } else {
+            return Err(Error::InvalidType(tok))
+        }
     } else { 
         Ok(ty)
     }

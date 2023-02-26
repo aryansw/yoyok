@@ -1,4 +1,3 @@
-use proptest::test_runner::Reason;
 use thiserror::Error;
 
 use crate::ast::ast::Type;
@@ -11,6 +10,8 @@ pub enum Error {
     UnknownFunction(String),
     #[error("Unknown variable: '{0}'")]
     UnknownVariable(String),
-    #[error("Argument count mismatch: expected {0} but found {1}")]
-    ArgumentCountMismatch(usize, usize),
+    #[error("Non-zero exit code: {0}")]
+    NonZeroExitCode(i64),
+    #[error("Argument count mismatch: expected {0} but found {1:?}")]
+    ArgumentCountMismatch(usize, Vec<(String, Type)>),
 }
