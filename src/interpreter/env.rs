@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
-
 use super::{error::Error, value::Value};
 use crate::ast::ast::*;
-use crate::ast::ast::{self, Expression as Expr};
+
 use anyhow::Error as AnyError;
 pub struct Env {
     vars: HashMap<String, (bool, Value)>,

@@ -54,7 +54,7 @@ pub enum Expression {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
-    Number(u64),
+    Number(i64),
     Bool(bool),
     Char(char),
     String(String),
@@ -73,7 +73,6 @@ pub enum Type {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Size {
     ThirtyTwo,
-    SixtyFour,
 }
 
 impl Type {
@@ -199,7 +198,6 @@ impl TryInto<Size> for u8 {
     fn try_into(self) -> Result<Size, Self::Error> {
         Ok(match self {
             32 => Size::ThirtyTwo,
-            64 => Size::SixtyFour,
             _ => return Err(Error::InvalidSize(self)),
         })
     }
@@ -207,7 +205,7 @@ impl TryInto<Size> for u8 {
 
 impl Into<Value> for u64 {
     fn into(self) -> Value {
-        Value::Number(self)
+        Value::Number(self as i64)
     }
 }
 

@@ -24,4 +24,6 @@ pub enum Error {
     ImmutableVariable(String),
     #[error("Undefined function: '{0}'")]
     UndefinedFunction(String),
+    #[error("Invalid Assignment: '{0}' is not assignable")]
+    InvalidAssignment(String),
 }

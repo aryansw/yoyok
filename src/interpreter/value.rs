@@ -15,7 +15,7 @@ pub enum Value {
 impl Value {
     pub fn type_of(&self) -> Type {
         match &self {
-            Value::Signed(_) => Type::Signed(Size::SixtyFour),
+            Value::Signed(_) => Type::Signed(Size::ThirtyTwo),
             Value::Bool(_) => Type::Bool,
             Value::Char(_) => Type::Char,
             Value::Tuple(x) => Type::Tuple(x.iter().map(|x| x.type_of()).collect()),

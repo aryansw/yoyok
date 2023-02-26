@@ -29,7 +29,6 @@ fn arb_unary() -> impl Strategy<Value = Operator> {
 fn arb_size() -> impl Strategy<Value = Size> {
     prop_oneof![
         Just(Size::ThirtyTwo),
-        Just(Size::SixtyFour),
     ]
 }
 
