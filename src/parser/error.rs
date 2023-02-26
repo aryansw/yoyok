@@ -1,7 +1,4 @@
-use itertools::ExactlyOneError;
 use thiserror::Error;
-
-use crate::ast::ast::Type;
 
 use super::tokens::Token;
 

@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::ast::ast::Type;
+use crate::ast::ast::{Operator, Type};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -14,4 +14,8 @@ pub enum Error {
     NonZeroExitCode(i64),
     #[error("Argument count mismatch: expected {0} but found {1:?}")]
     ArgumentCountMismatch(usize, Vec<(String, Type)>),
+    #[error("Invalid Operation: '{0}' on '{1}'")]
+    InvalidUnary(Operator, Type),
+    #[error("Invalid Operation: '{0}' on '{1}' and '{2}'")]
+    InvalidBinary(Operator, Type, Type),
 }

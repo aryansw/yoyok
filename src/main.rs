@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log::init(args.verbose).map_err(|_| Error::LogError)?;
     if let Some(src) = args.file {
         let source = fs::read_to_string(&src).context("Failed to read file")?;
-        run_str(&source).context("Failed to compile program".bright_red())?;
+        run_str(&source).context("Failed to run program".bright_red())?;
     } else {
         info!("Running a random program");
         let mut runner = TestRunner::new(Config {
@@ -56,8 +56,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Run program from string
 fn run_str(source: &str) -> Result<(), AnyError> {
-    let ast = parse(source)?;
-    let res = run_program(ast)?;
+    let ast = parse(source).context("Error while parsing")?;
+    run_program(ast).context("Error while running program")?;
     Ok(())
 }
 
