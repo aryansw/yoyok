@@ -19,7 +19,7 @@ impl Display for Function {
         let body = apply_indent(format!("{}", self.body), 2);
         write!(
             f,
-            "fn {}({}) -> {} {{\n{}}}",
+            "fn {}({}) -> {} {{\n{}}}\n\n",
             self.name, args, self.ret, body
         )
     }

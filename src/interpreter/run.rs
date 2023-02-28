@@ -1,10 +1,8 @@
-use anyhow::Context;
-use itertools::Itertools;
-
 use super::env::Env;
 use super::{error::Error, value::Value};
 use crate::ast::ast::*;
 use crate::ast::ast::{self, Expression as Expr};
+use anyhow::Context;
 use anyhow::Error as AnyError;
 
 pub fn run_program(prgm: Program) -> Result<(), AnyError> {
@@ -20,7 +18,7 @@ pub fn run_program(prgm: Program) -> Result<(), AnyError> {
     if main.args.len() != 0 {
         Err(Error::ArgumentCountMismatch(0, main.args))?
     } else {
-        let value = run_func(main, Env::from_funcs(funcs))?;
+        let value = run_func(&main, Env::from_funcs(funcs))?;
         if let Value::Signed(val) = value {
             if val == 0 {
                 Ok(())
@@ -36,22 +34,22 @@ pub fn run_program(prgm: Program) -> Result<(), AnyError> {
     }
 }
 
-fn run_func(curr: Function, mut env: Env) -> Result<Value, AnyError> {
-    run_exprs(curr.body.0, &mut env)
+fn run_func(curr: &Function, mut env: Env) -> Result<Value, AnyError> {
+    run_exprs(&curr.body.0, &mut env)
 }
 
-fn run_exprs(exprs: Vec<Expr>, env: &mut Env) -> Result<Value, AnyError> {
-    let mut val = Value::Signed(1);
+fn run_exprs(exprs: &Vec<Expr>, env: &mut Env) -> Result<Value, AnyError> {
+    let mut val = Value::Signed(0);
     for expr in exprs {
-        val = run_expr(expr, env)?;
+        val = run_expr(&expr, env)?;
     }
     Ok(val)
 }
 
-fn run_expr(expr: Expression, env: &mut Env) -> Result<Value, AnyError> {
+fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
     let val = match expr {
         Expression::Unary { op, rhs } => {
-            let val = run_expr(*rhs, env)?;
+            let val = run_expr(rhs, env)?;
             val.unary(op)?
         }
         // Remember that assign needs to be handled differently
@@ -60,8 +58,8 @@ fn run_expr(expr: Expression, env: &mut Env) -> Result<Value, AnyError> {
             op: Operator::Assign,
             rhs,
         } => {
-            if let Expression::Reference(name) = *lhs {
-                let val = run_expr(*rhs, env)?;
+            if let Expression::Reference(name) = lhs.as_ref() {
+                let val = run_expr(rhs, env)?;
                 env.update(name, val)?;
                 Value::Tuple(vec![])
             } else {
@@ -70,14 +68,14 @@ fn run_expr(expr: Expression, env: &mut Env) -> Result<Value, AnyError> {
         }
 
         Expression::Binary { lhs, op, rhs } => {
-            let lhs = run_expr(*lhs, env)?;
-            let rhs = run_expr(*rhs, env)?;
+            let lhs = run_expr(lhs, env)?;
+            let rhs = run_expr(rhs, env)?;
             lhs.binary(op, &rhs)?
         }
         Expression::Value(val) => match val {
-            ast::Value::Number(x) => Value::Signed(x),
-            ast::Value::Bool(x) => Value::Bool(x),
-            ast::Value::Char(x) => Value::Char(x),
+            ast::Value::Number(x) => Value::Signed(*x),
+            ast::Value::Bool(x) => Value::Bool(*x),
+            ast::Value::Char(x) => Value::Char(*x),
             ast::Value::String(x) => Value::Array(x.chars().into_iter().map(Value::Char).collect()),
         },
         Expression::Tuple(_) => todo!(),
@@ -89,20 +87,20 @@ fn run_expr(expr: Expression, env: &mut Env) -> Result<Value, AnyError> {
             ty,
             mutable,
         } => {
-            let val = run_expr(*value, env)?;
+            let val = run_expr(value, env)?;
             if let Some(ty) = ty {
                 ty.context(val.type_of())?;
             }
-            env.insert(name, val, mutable);
+            env.insert(name, val, *mutable);
             Value::Tuple(vec![])
         }
         Expression::If { cond, then, else_ } => {
-            let cond = run_expr(*cond, env)?;
+            let cond = run_expr(cond, env)?;
             if let Value::Bool(cond) = cond {
                 if cond {
-                    run_exprs(then.0, env)?
+                    run_exprs(&then.0, env)?
                 } else if let Some(else_) = else_ {
-                    run_exprs(else_.0, env)?
+                    run_exprs(&else_.0, env)?
                 } else {
                     Value::Tuple(vec![])
                 }
@@ -110,13 +108,35 @@ fn run_expr(expr: Expression, env: &mut Env) -> Result<Value, AnyError> {
                 Err(Error::UnexpectedType(Type::Bool, cond.type_of()))?
             }
         }
-        Expression::Call { func, args } => todo!(),
+        Expression::Call { func, args } => {
+            let func = run_expr(func, env)?;
+            let args = args
+                .into_iter()
+                .map(|arg| run_expr(arg, env))
+                .collect::<Result<Vec<_>, _>>()?;
+            if let Value::Function(func) = &func && func.args.len() == args.len(){
+                let mut env = env.call();
+                for ((name, _), val) in func.args.iter().zip(args) {
+                    env.insert(name, val, false);
+                }
+                run_func(func, env)?
+            } else {
+                let arg_ty = args.iter().map(|arg| arg.type_of()).collect::<Vec<_>>();
+                Err(Error::UnexpectedType(
+                    Type::Function {
+                        args: arg_ty,
+                        ret: Box::new(Type::unit()),
+                    },
+                    func.type_of(),
+                ))?
+            }
+        }
         Expression::While { cond, body } => {
             loop {
-                let cond = run_expr(*cond.clone(), env)?;
+                let cond = run_expr(cond, env)?;
                 if let Value::Bool(cond) = cond {
                     if cond {
-                        run_exprs(body.0.clone(), env)?;
+                        run_exprs(&body.0, env)?;
                     } else {
                         break;
                     }
@@ -131,25 +151,25 @@ fn run_expr(expr: Expression, env: &mut Env) -> Result<Value, AnyError> {
 }
 
 impl Value {
-    fn unary(&self, op: Operator) -> Result<Value, AnyError> {
+    fn unary(&self, op: &Operator) -> Result<Value, AnyError> {
         match op {
             Operator::Not => {
                 let Value::Bool(x) = self else {
-                    Err(Error::InvalidUnary(op, self.type_of()))?
+                    Err(Error::InvalidUnary(*op, self.type_of()))?
                 };
                 Ok(Value::Bool(!x))
             }
             Operator::Sub => {
                 let Value::Signed(x) = self else {
-                    Err(Error::InvalidUnary(op, self.type_of()))?
+                    Err(Error::InvalidUnary(*op, self.type_of()))?
                 };
                 Ok(Value::Signed(-x))
             }
-            _ => Err(Error::InvalidUnary(op, self.type_of()))?,
+            _ => Err(Error::InvalidUnary(*op, self.type_of()))?,
         }
     }
 
-    fn binary(&self, op: Operator, rhs: &Value) -> Result<Value, AnyError> {
+    fn binary(&self, op: &Operator, rhs: &Value) -> Result<Value, AnyError> {
         let value = match (self, rhs) {
             (Value::Signed(x), Value::Signed(y)) => match op {
                 Operator::Add => Value::Signed(x + y),
@@ -162,21 +182,21 @@ impl Value {
                 Operator::Lte => Value::Bool(x <= y),
                 Operator::Eq => Value::Bool(x == y),
                 Operator::Neq => Value::Bool(x != y),
-                _ => Err(Error::InvalidBinary(op, self.type_of(), rhs.type_of()))?,
+                _ => Err(Error::InvalidBinary(*op, self.type_of(), rhs.type_of()))?,
             },
             (Value::Bool(x), Value::Bool(y)) => match op {
                 Operator::And => Value::Bool(*x && *y),
                 Operator::Or => Value::Bool(*x || *y),
                 Operator::Eq => Value::Bool(x == y),
                 Operator::Neq => Value::Bool(x != y),
-                _ => Err(Error::InvalidBinary(op, self.type_of(), rhs.type_of()))?,
+                _ => Err(Error::InvalidBinary(*op, self.type_of(), rhs.type_of()))?,
             },
             (Value::Char(x), Value::Char(y)) => match op {
                 Operator::Eq => Value::Bool(x == y),
                 Operator::Neq => Value::Bool(x != y),
-                _ => Err(Error::InvalidBinary(op, self.type_of(), rhs.type_of()))?,
+                _ => Err(Error::InvalidBinary(*op, self.type_of(), rhs.type_of()))?,
             },
-            _ => Err(Error::InvalidBinary(op, self.type_of(), rhs.type_of()))?,
+            _ => Err(Error::InvalidBinary(*op, self.type_of(), rhs.type_of()))?,
         };
         Ok(value)
     }
