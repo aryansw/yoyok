@@ -1,5 +1,6 @@
 fn main() -> i32 {
   let x = 12;
+  # Single line comments are supported anywhere
   var y: i32 = if x > 0 {
       0
   } else {

@@ -67,12 +67,4 @@ impl Env {
     pub fn insert(&mut self, name: &String, value: Value, mutable: bool) {
         self.vars.insert(name.clone(), (mutable, value));
     }
-
-    pub fn find_func(&self, name: &String) -> Result<Function, AnyError> {
-        if let Some(func) = self.funcs.get(name) {
-            Ok(func.clone())
-        } else {
-            Err(Error::UndefinedFunction(name.clone()))?
-        }
-    }
 }

@@ -6,10 +6,6 @@ use crate::ast::ast::{Operator, Type};
 pub enum Error {
     #[error("Unexpected Type: expected '{0}' but found '{1}'")]
     UnexpectedType(Type, Type),
-    #[error("Unknown function: '{0}'")]
-    UnknownFunction(String),
-    #[error("Unknown variable: '{0}'")]
-    UnknownVariable(String),
     #[error("Non-zero exit code: {0}")]
     NonZeroExitCode(i64),
     #[error("Argument count mismatch: expected {0} but found {1:?}")]
@@ -22,8 +18,6 @@ pub enum Error {
     UndefinedVariable(String),
     #[error("Immutable variable: '{0}'")]
     ImmutableVariable(String),
-    #[error("Undefined function: '{0}'")]
-    UndefinedFunction(String),
     #[error("Invalid Assignment: '{0}' is not assignable")]
     InvalidAssignment(String),
 }

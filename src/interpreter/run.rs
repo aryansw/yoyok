@@ -116,6 +116,7 @@ fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
                 .collect::<Result<Vec<_>, _>>()?;
             if let Value::Function(func) = &func && func.args.len() == args.len(){
                 let mut env = env.call();
+                // Create a new environment for the function, and insert the arguments into it
                 for ((name, _), val) in func.args.iter().zip(args) {
                     env.insert(name, val, false);
                 }

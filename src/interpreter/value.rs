@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use crate::ast::ast::{Function, Size, Type};
 
 #[derive(Clone, Debug, PartialEq)]
