@@ -1,6 +1,9 @@
 use proptest::{option, prelude::*};
 
-use crate::ast::tree::{Expr, Expression, Operator, Sequence, Size, Type, Value};
+use crate::{
+    ast::tree::{Expr, Expression, Operator, Sequence, Value},
+    semantics::types::{Size, Type},
+};
 
 use super::tree::{Function, Program};
 

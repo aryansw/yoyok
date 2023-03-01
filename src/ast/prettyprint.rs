@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
-use super::tree::{
-    Expr, Expression, Function, Operator, Program, Sequence, Size, Type, TypeBound, Value,
-};
+use crate::semantics::types::{Size, Type};
+
+use super::tree::{Expr, Expression, Function, Operator, Program, Sequence, TypeBound, Value};
 
 impl<T: TypeBound> Display for Program<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

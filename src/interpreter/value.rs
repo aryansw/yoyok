@@ -1,4 +1,5 @@
-use crate::ast::tree::{Function, Size, Type, TypeBound};
+use crate::ast::tree::{Function, TypeBound};
+use crate::semantics::types::{Size, Type};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value<T: TypeBound> {

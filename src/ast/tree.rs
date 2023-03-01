@@ -1,4 +1,7 @@
-use crate::parser::error::Error;
+use crate::{
+    parser::error::Error,
+    semantics::types::{Size, Type},
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Program<T: TypeBound>(pub Vec<Function<T>>);
@@ -70,27 +73,6 @@ pub enum Value {
     Bool(bool),
     Char(char),
     String(String),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Type {
-    Signed(Size),
-    Bool,
-    Char,
-    Tuple(Vec<Type>),
-    Array(Box<Type>, usize),
-    Function { args: Vec<Type>, ret: Box<Type> },
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Size {
-    ThirtyTwo,
-}
-
-impl Type {
-    pub fn unit() -> Self {
-        Type::Tuple(vec![])
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

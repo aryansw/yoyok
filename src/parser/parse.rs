@@ -2,12 +2,14 @@ use colored::Colorize;
 use log::debug;
 
 use crate::{
-    ast::tree::{Expr, Expression, Function, Operator, Program, Sequence as Seq, Type},
+    ast::tree::{Expr, Expression, Function, Operator, Program, Sequence as Seq},
     parser::error::Error,
     parser::tokens::Keyword::*,
     parser::tokens::TokenType::*,
 };
 
+
+use crate::semantics::types::{Size, Type};
 use super::scanner::Scanner;
 
 // Peek at the next token, and return an error if it doesn't match the pattern
