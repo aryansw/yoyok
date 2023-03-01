@@ -15,25 +15,19 @@ pub fn run_program<T: TypeBound>(prgm: Program<T>) -> Result<(), AnyError> {
         .find(|func| func.name == "main")
         .cloned()
         .context("No main() function found")?;
-    main.ret
-        .expect(Type::Signed(Size::ThirtyTwo))
-        .context("main() function should return i32")?;
-    if !main.args.is_empty() {
-        Err(Error::ArgumentCountMismatch(0, main.args))?
-    } else {
-        let value = run_func(&main, Env::from_funcs(funcs))?;
-        if let Value::Signed(val) = value {
-            if val == 0 {
-                Ok(())
-            } else {
-                Err(Error::NonZeroExitCode(val))?
-            }
+
+    let value = run_func(&main, Env::from_funcs(funcs))?;
+    if let Value::Signed(val) = value {
+        if val == 0 {
+            Ok(())
         } else {
-            Err(Error::UnexpectedType(
-                Type::Signed(Size::ThirtyTwo),
-                value.type_of(),
-            ))?
+            Err(Error::NonZeroExitCode(val))?
         }
+    } else {
+        Err(Error::UnexpectedType(
+            Type::Signed(Size::ThirtyTwo),
+            value.type_of(),
+        ))?
     }
 }
 
@@ -209,7 +203,7 @@ impl<T: TypeBound> Value<T> {
 }
 
 impl Type {
-    fn expect(&self, expected: Type) -> Result<(), Error> {
+    fn expect_type(&self, expected: Type) -> Result<(), Error> {
         if self == &expected {
             Ok(())
         } else {

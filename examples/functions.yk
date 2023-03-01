@@ -8,7 +8,7 @@ fn run(x: i32) -> i32 {
 
 fn main() -> i32 {
   # Yes, higher order functions are supported.
-  let q = run;
+  let q: (i32) -> i32 = run;
   let x = q(-12);
   var y: i32 = if x > 0 {
       0

@@ -17,6 +17,7 @@ use interpreter::run::run_program;
 use parser::parse::parse;
 use proptest::test_runner::Reason;
 use proptest::test_runner::{Config, TestCaseError, TestRunner};
+use semantics::typeinfer::infer;
 use std::fs;
 
 // Modules
@@ -61,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Run program from string
 fn run_str(source: &str) -> Result<(), AnyError> {
     let ast = parse(source).context("Error while parsing")?;
-    // let ast = infer_types(ast).context("Error while inferring types")?;
+    let ast = infer(ast).context("Error while inferring types")?;
     run_program(ast).context("Error while running program")?;
     Ok(())
 }
