@@ -2,7 +2,7 @@ use colored::Colorize;
 use log::debug;
 
 use crate::{
-    ast::ast::{Expression, Operator, Sequence as Seq, Type, Function, Program, Expr},
+    ast::tree::{Expr, Expression, Function, Operator, Program, Sequence as Seq, Type},
     parser::error::Error,
     parser::tokens::Keyword::*,
     parser::tokens::TokenType::*,
@@ -43,16 +43,14 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
         Name(ref x) => {
             // First check if the beginning is i, u, f
             let ty = match &x[..1] {
-                "i"  => {
+                "i" => {
                     let size = x[1..].parse::<u8>()?.try_into()?;
                     Type::Signed(size)
                 }
-                _ => {
-                    match x.as_str() {
-                        "bool" => Type::Bool,
-                        "char" => Type::Char,
-                        _ => return Err(Error::InvalidType(tok))
-                    }
+                _ => match x.as_str() {
+                    "bool" => Type::Bool,
+                    "char" => Type::Char,
+                    _ => return Err(Error::InvalidType(tok)),
                 },
             };
             ty
@@ -89,7 +87,7 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
                 ret: Box::new(ret),
             })
         } else {
-            return Err(Error::InvalidType(tok))
+            Err(Error::InvalidType(tok))
         }
     } else { 
         Ok(ty)
@@ -105,12 +103,9 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Expression<()>, Error> {
             let op = Operator::from(&x)?;
             op.expect_unary()?;
             let rhs = Box::new(parse_expr(scan, _min)?);
-            Expr::Unary {
-                op,
-                rhs,
-            }
+            Expr::Unary { op, rhs }
         }
-        Number(x)  => Expr::Value(x.into()),
+        Number(x) => Expr::Value(x.into()),
         Literal(x) => Expr::Value(x.into()),
         Name(x) => Expr::Reference(x),
         Keyword(True) => Expr::Value(true.into()),
@@ -167,8 +162,8 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Expression<()>, Error> {
                 if let Delim(',') = scan.peek()?.token {
                     let mut exprs = vec![expr];
                     while let Delim(',') = scan.peek()?.token {
-                        scan.next()?; // 
-                        // Handle single element tuples
+                        scan.next()?; //
+                                      // Handle single element tuples
                         if let Delim(')') = scan.peek()?.token {
                             break;
                         }
@@ -177,7 +172,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Expression<()>, Error> {
                     expect!(scan, Delim(')'))?;
                     Expr::Tuple(exprs)
                 } else {
-                // 3. If we parse an expr, and then only see a ')', it's a parenthesized expression
+                    // 3. If we parse an expr, and then only see a ')', it's a parenthesized expression
                     expect!(scan, Delim(')'))?;
                     expr.expr
                 }
@@ -201,43 +196,33 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Expression<()>, Error> {
         _ => Err(Error::UnexpectedToken("".into(), tok))?,
     };
 
-    
-    // Function Application 
-    loop {
-        if let Delim('(') = scan.peek()?.token {
-            scan.next()?; // (
-            let mut args = vec![];
-            loop {
-                if let Delim(')') = scan.peek()?.token {
-                    scan.next()?; // )
-                    break;
-                }
-                args.push(parse_expr(scan, 0)?);
-                if let Delim(',') = scan.peek()?.token {
-                    scan.next()?; // ,
-                } else {
-                    expect!(scan, Delim(')'))?;
-                    break;
-                }
+    // Function Application
+    while let Delim('(') = scan.peek()?.token {
+        scan.next()?; // (
+        let mut args = vec![];
+        loop {
+            if let Delim(')') = scan.peek()?.token {
+                scan.next()?; // )
+                break;
             }
-            expr = Expr::Call {
-                func: Box::new(expr.into()),
-                args,
-            }.into();
-        } else {
-            break;
+            args.push(parse_expr(scan, 0)?);
+            if let Delim(',') = scan.peek()?.token {
+                scan.next()?; // ,
+            } else {
+                expect!(scan, Delim(')'))?;
+                break;
+            }
         }
+        expr = Expr::Call {
+            func: Box::new(expr.into()),
+            args,
+        };
     }
 
     // Operator Parsing (with Precedence Climbing)
-    loop {
-        let op = match scan.peek()?.token {
-            Op(x) => {
-                scan.next()?;
-                Operator::from(&x)?
-            }
-            _ => break,
-        };
+    while let Op(x) = scan.peek()?.token {
+        let op = Operator::from(&x)?;
+        scan.next()?;
         op.expect_binary()?;
         let rhs = parse_expr(scan, op.prec() + op.assoc())?;
         expr = Expr::Binary {
@@ -304,7 +289,7 @@ pub fn parse_func(scan: &mut Scanner) -> Result<Function<()>, Error> {
 pub fn parse(src: &str) -> Result<Program<()>, Error> {
     let scan = &mut Scanner::new(src);
     let mut prgm = vec![];
-    while !matches!(scan.peek()?.token, EOF)  {
+    while !matches!(scan.peek()?.token, Eof) {
         prgm.push(parse_func(scan)?);
     }
     let prgm = Program(prgm);

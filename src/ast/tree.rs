@@ -133,17 +133,11 @@ impl Operator {
     }
 
     fn is_binary(&self) -> bool {
-        match self {
-            Self::Not => false,
-            _ => true,
-        }
+        !matches!(self, Self::Not)
     }
 
     fn is_unary(&self) -> bool {
-        match self {
-            Self::Not | Self::Sub => true,
-            _ => false,
-        }
+        matches!(self, Self::Not | Self::Sub)
     }
 
     pub fn expect_binary(&self) -> Result<(), Error> {
@@ -169,7 +163,7 @@ impl Operator {
             Self::Mul | Self::Div => 2,
             x if x.is_comparison() => 3,
             x if x.is_logical() => 4,
-            Self::Assign | _ => 5,
+            _ => 5,
         }
     }
 
@@ -178,29 +172,23 @@ impl Operator {
             x if x.is_arith() => 1,
             x if x.is_comparison() => 1,
             x if x.is_logical() => 1,
-            Self::Assign | _ => 0,
+            _ => 0,
         }
     }
 
     pub fn is_arith(&self) -> bool {
-        match self {
-            Self::Add | Self::Sub | Self::Mul | Self::Div => true,
-            _ => false,
-        }
+        matches!(self, Self::Add | Self::Sub | Self::Mul | Self::Div)
     }
 
     pub fn is_comparison(&self) -> bool {
-        match self {
-            Self::Gt | Self::Lt | Self::Lte | Self::Gte | Self::Eq | Self::Neq => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Self::Gt | Self::Lt | Self::Lte | Self::Gte | Self::Eq | Self::Neq
+        )
     }
 
     pub fn is_logical(&self) -> bool {
-        match self {
-            Self::And | Self::Or | Self::Not => true,
-            _ => false,
-        }
+        matches!(self, Self::And | Self::Or | Self::Not)
     }
 }
 
@@ -215,15 +203,15 @@ impl TryInto<Size> for u8 {
     }
 }
 
-impl Into<Value> for u64 {
-    fn into(self) -> Value {
-        Value::Number(self as i64)
+impl From<u64> for Value {
+    fn from(val: u64) -> Self {
+        Value::Number(val as i64)
     }
 }
 
-impl Into<Value> for bool {
-    fn into(self) -> Value {
-        Value::Bool(self)
+impl From<bool> for Value {
+    fn from(val: bool) -> Self {
+        Value::Bool(val)
     }
 }
 

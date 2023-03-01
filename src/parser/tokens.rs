@@ -1,4 +1,4 @@
-use crate::ast::ast::Value;
+use crate::ast::tree::Value;
 
 use super::error::Error;
 use std::fmt::Display;
@@ -17,7 +17,7 @@ pub enum TokenType {
     Keyword(Keyword),
     Delim(char),
     Literal(Literal),
-    EOF,
+    Eof,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -26,21 +26,21 @@ pub enum Literal {
     Char(char),
 }
 
-impl Into<Literal> for char {
-    fn into(self) -> Literal {
-        Literal::Char(self)
+impl From<char> for Literal {
+    fn from(val: char) -> Self {
+        Literal::Char(val)
     }
 }
 
-impl Into<Literal> for String {
-    fn into(self) -> Literal {
-        Literal::String(self)
+impl From<String> for Literal {
+    fn from(val: String) -> Self {
+        Literal::String(val)
     }
 }
 
-impl Into<Value> for Literal {
-    fn into(self) -> Value {
-        match self {
+impl From<Literal> for Value {
+    fn from(val: Literal) -> Self {
+        match val {
             Literal::Char(c) => Value::Char(c),
             Literal::String(s) => Value::String(s),
         }
@@ -65,9 +65,9 @@ impl TokenType {
     }
 }
 
-impl Into<Keyword> for String {
-    fn into(self) -> Keyword {
-        match self.as_str() {
+impl From<String> for Keyword {
+    fn from(value: String) -> Self {
+        match value.as_str() {
             "let" => Keyword::Let,
             "var" => Keyword::Var,
             "if" => Keyword::If,

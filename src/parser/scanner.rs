@@ -88,7 +88,7 @@ impl<'a> Scanner<'a> {
                 self.next_tok().map(|tok| tok.token)
             }
             Some(x) => Err(Error::UnrecognizedToken(x, pos)),
-            None => Ok(EOF),
+            None => Ok(Eof),
         }
         .map(|tok| tok.with_pos(pos))
     }
@@ -180,8 +180,8 @@ mod tests {
         assert_eq!(scan.next()?.token, Op(vec!['=']));
         assert_eq!(scan.next()?.token, Number(5));
         assert_eq!(scan.next()?.token, Delim(';'));
-        assert_eq!(scan.next()?.token, EOF);
-        assert_eq!(scan.next()?.token, EOF);
+        assert_eq!(scan.next()?.token, Eof);
+        assert_eq!(scan.next()?.token, Eof);
         Ok(())
     }
 }

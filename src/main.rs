@@ -3,9 +3,10 @@
 #![feature(assert_matches)]
 #![feature(result_option_inspect)]
 #![feature(trivial_bounds)]
+// Cargo Clippy settings
+#![allow(dead_code, unused_variables)]
 
-use std::fs;
-
+// Crates
 use crate::error::Error;
 use ::log::info;
 use anyhow::Context;
@@ -13,10 +14,10 @@ use anyhow::Error as AnyError;
 use clap::Parser;
 use colored::Colorize;
 use interpreter::run::run_program;
-use parser::parser::parse;
+use parser::parse::parse;
 use proptest::test_runner::Reason;
 use proptest::test_runner::{Config, TestCaseError, TestRunner};
-use semantics::typeinfer::infer_types;
+use std::fs;
 
 // Modules
 mod ast;
@@ -39,9 +40,9 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    log::init(args.verbose).map_err(|_| Error::LogError)?;
+    log::init(args.verbose).map_err(|_| Error::Log)?;
     if let Some(src) = args.file {
-        let source = fs::read_to_string(&src).context("Failed to read file")?;
+        let source = fs::read_to_string(src).context("Failed to read file")?;
         run_str(&source).context("Failed to run program".bright_red())?;
     } else {
         info!("Running a random program");

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::ast::{
+use super::tree::{
     Expr, Expression, Function, Operator, Program, Sequence, Size, Type, TypeBound, Value,
 };
 
@@ -34,7 +34,7 @@ impl<T: TypeBound> Display for Sequence<T> {
             if it.peek().is_none() {
                 write!(f, "{}", &expr)?;
             } else {
-                write!(f, "{};\n", expr)?;
+                writeln!(f, "{};", expr)?;
             }
         }
         Ok(())
@@ -198,7 +198,7 @@ fn apply_indent(str: String, idt: i32) -> String {
     for line in str.lines() {
         s.push_str(&" ".repeat(idt as usize));
         s.push_str(line);
-        s.push_str("\n");
+        s.push('\n');
     }
     s
 }

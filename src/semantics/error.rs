@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::ast::ast::{Expr, Type};
+use crate::ast::tree::{Expr, Type};
 
 #[derive(Error, Debug)]
 pub enum Error {

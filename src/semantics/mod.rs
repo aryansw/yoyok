@@ -1,2 +1,2 @@
-pub mod typeinfer;
 mod error;
+pub mod typeinfer;

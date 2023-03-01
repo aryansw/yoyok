@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::ast::ast::{Operator, Type};
+use crate::ast::tree::{Operator, Type};
 
 #[derive(Error, Debug)]
 pub enum Error {

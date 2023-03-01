@@ -1,8 +1,8 @@
 use proptest::{option, prelude::*};
 
-use crate::ast::ast::{Expr, Expression, Operator, Sequence, Size, Type, Value};
+use crate::ast::tree::{Expr, Expression, Operator, Sequence, Size, Type, Value};
 
-use super::ast::{Function, Program};
+use super::tree::{Function, Program};
 
 fn arb_binary() -> impl Strategy<Value = Operator> {
     prop_oneof![
@@ -38,11 +38,11 @@ fn arb_type() -> impl Strategy<Value = Type> {
     ];
     leaf.prop_recursive(5, 22, 12, |inner| {
         prop_oneof![
-            prop::collection::vec(inner.clone(), 1..4).prop_map(|seq| Type::Tuple(seq)),
+            prop::collection::vec(inner.clone(), 1..4).prop_map(Type::Tuple),
             (inner.clone(), any::<usize>()).prop_map(|(ty, size)| Type::Array(Box::new(ty), size)),
-            (prop::collection::vec(inner.clone(), 1..4), inner.clone()).prop_map(|(args, ret)| {
+            (prop::collection::vec(inner.clone(), 1..4), inner).prop_map(|(args, ret)| {
                 Type::Function {
-                    args: args,
+                    args,
                     ret: Box::new(ret),
                 }
             }),
@@ -114,7 +114,7 @@ fn arb_expr() -> impl Strategy<Value = Expression<()>> {
             ),
             (
                 inner.clone(),
-                prop::collection::vec(inner.clone(), 1..10).prop_map(Sequence)
+                prop::collection::vec(inner, 1..10).prop_map(Sequence)
             )
                 .prop_map(|(cond, body)| {
                     Expr::While {
@@ -128,7 +128,7 @@ fn arb_expr() -> impl Strategy<Value = Expression<()>> {
 }
 
 fn arb_seq() -> impl Strategy<Value = Sequence<()>> {
-    prop::collection::vec(arb_expr(), 1..10).prop_map(|seq| Sequence(seq))
+    prop::collection::vec(arb_expr(), 1..10).prop_map(Sequence)
 }
 
 fn arb_func() -> impl Strategy<Value = Function<()>> {
@@ -172,7 +172,7 @@ mod tests {
         #[test]
         fn proptest_parse(prgm in arb_prgm()){
             let src = format!("{}", prgm);
-            let _parse = parse(&src).inspect_err(|_e| println!("\n{}\n{}", format!("Test input:").bright_red(), src))?;
+            let _parse = parse(&src).inspect_err(|_e| println!("\n{}\n{}", "Test input:".bright_red(), src))?;
         }
 
     }

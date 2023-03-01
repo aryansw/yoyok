@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use super::{error::Error, value::Value};
-use crate::ast::ast::*;
+use crate::ast::tree::*;
 
 use anyhow::Error as AnyError;
 
@@ -64,7 +64,7 @@ impl<T: TypeBound> Env<T> {
         }
     }
 
-    pub fn insert(&mut self, name: &String, value: Value<T>, mutable: bool) {
-        self.vars.insert(name.clone(), (mutable, value));
+    pub fn insert(&mut self, name: &str, value: Value<T>, mutable: bool) {
+        self.vars.insert(name.to_owned(), (mutable, value));
     }
 }

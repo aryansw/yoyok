@@ -1,7 +1,7 @@
 use super::env::Env;
 use super::{error::Error, value::Value};
-use crate::ast::ast::*;
-use crate::ast::ast::{self};
+use crate::ast::tree::*;
+use crate::ast::tree::{self};
 use anyhow::Context;
 use anyhow::Error as AnyError;
 
@@ -17,8 +17,8 @@ pub fn run_program<T: TypeBound>(prgm: Program<T>) -> Result<(), AnyError> {
     main.ret
         .expect(Type::Signed(Size::ThirtyTwo))
         .context("main() function should return i32")?;
-    if main.args.len() != 0 {
-        Err(Error::ArgumentCountMismatch(0, main.args.clone()))?
+    if !main.args.is_empty() {
+        Err(Error::ArgumentCountMismatch(0, main.args))?
     } else {
         let value = run_func(&main, Env::from_funcs(funcs))?;
         if let Value::Signed(val) = value {
@@ -46,7 +46,7 @@ fn run_exprs<T: TypeBound>(
 ) -> Result<Value<T>, AnyError> {
     let mut val = Value::Signed(0);
     for expr in exprs {
-        val = run_expr(&expr, env).context(format!("On expression: {}", expr))?;
+        val = run_expr(expr, env).context(format!("On expression: {}", expr))?;
     }
     Ok(val)
 }
@@ -77,10 +77,10 @@ fn run_expr<T: TypeBound>(expr: &Expression<T>, env: &mut Env<T>) -> Result<Valu
             lhs.binary(op, &rhs)?
         }
         Expr::Value(val) => match val {
-            ast::Value::Number(x) => Value::Signed(*x),
-            ast::Value::Bool(x) => Value::Bool(*x),
-            ast::Value::Char(x) => Value::Char(*x),
-            ast::Value::String(x) => Value::Array(x.chars().into_iter().map(Value::Char).collect()),
+            tree::Value::Number(x) => Value::Signed(*x),
+            tree::Value::Bool(x) => Value::Bool(*x),
+            tree::Value::Char(x) => Value::Char(*x),
+            tree::Value::String(x) => Value::Array(x.chars().map(Value::Char).collect()),
         },
         Expr::Tuple(_) => todo!(),
         Expr::Array(_) => todo!(),
@@ -115,7 +115,7 @@ fn run_expr<T: TypeBound>(expr: &Expression<T>, env: &mut Env<T>) -> Result<Valu
         Expr::Call { func, args } => {
             let func = run_expr(func, env)?;
             let args = args
-                .into_iter()
+                .iter()
                 .map(|arg| run_expr(arg, env))
                 .collect::<Result<Vec<_>, _>>()?;
             if let Value::Function(func) = &func && func.args.len() == args.len(){

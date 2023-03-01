@@ -5,7 +5,7 @@ use super::tokens::Token;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Error while parsing number: '{0}'")]
-    ParseIntError(#[from] std::num::ParseIntError),
+    ParseInt(#[from] std::num::ParseIntError),
     #[error("Unrecognized token: '{0}'")]
     UnrecognizedToken(char, usize),
     #[error("Expected {0}, Received: '{1}'")]
