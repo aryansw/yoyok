@@ -5,6 +5,8 @@ use crate::ast::ast::{self};
 use anyhow::Context;
 use anyhow::Error as AnyError;
 
+// Currently, the interpreter completely ignores the type information (Type Erasure),
+// but we can use the type information to check the types of the values at runtime.
 pub fn run_program<T: TypeBound>(prgm: Program<T>) -> Result<(), AnyError> {
     let funcs = prgm.0;
     let main: Function<T> = funcs
@@ -44,7 +46,7 @@ fn run_exprs<T: TypeBound>(
 ) -> Result<Value<T>, AnyError> {
     let mut val = Value::Signed(0);
     for expr in exprs {
-        val = run_expr(&expr, env)?;
+        val = run_expr(&expr, env).context(format!("On expression: {}", expr))?;
     }
     Ok(val)
 }
@@ -122,7 +124,7 @@ fn run_expr<T: TypeBound>(expr: &Expression<T>, env: &mut Env<T>) -> Result<Valu
                 for ((name, _), val) in func.args.iter().zip(args) {
                     env.insert(name, val, false);
                 }
-                run_func(func, env)?
+                run_func(func, env).context(format!("On call to function '{}'", func.name))?
             } else {
                 let arg_ty = args.iter().map(|arg| arg.type_of()).collect::<Vec<_>>();
                 Err(Error::UnexpectedType(

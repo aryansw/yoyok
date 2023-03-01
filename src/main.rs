@@ -16,6 +16,7 @@ use interpreter::run::run_program;
 use parser::parser::parse;
 use proptest::test_runner::Reason;
 use proptest::test_runner::{Config, TestCaseError, TestRunner};
+use semantics::typeinfer::infer_types;
 
 // Modules
 mod ast;
@@ -23,6 +24,7 @@ mod error;
 mod interpreter;
 mod log;
 mod parser;
+mod semantics;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -58,6 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Run program from string
 fn run_str(source: &str) -> Result<(), AnyError> {
     let ast = parse(source).context("Error while parsing")?;
+    // let ast = infer_types(ast).context("Error while inferring types")?;
     run_program(ast).context("Error while running program")?;
     Ok(())
 }

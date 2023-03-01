@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::parser::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
