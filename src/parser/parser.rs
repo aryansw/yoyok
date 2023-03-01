@@ -2,7 +2,7 @@ use colored::Colorize;
 use log::debug;
 
 use crate::{
-    ast::ast::{Expression as Exp, Operator, Sequence as Seq, Type, Function, Program},
+    ast::ast::{Expression, Operator, Sequence as Seq, Type, Function, Program, Expr},
     parser::error::Error,
     parser::tokens::Keyword::*,
     parser::tokens::TokenType::*,
@@ -97,24 +97,24 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
 }
 
 // Minimum precedence of the next operator
-fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
+fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Expression<()>, Error> {
     let tok = scan.next()?;
 
-    let mut expr = match tok.token {
+    let mut expr: Expr<()> = match tok.token {
         Op(x) => {
             let op = Operator::from(&x)?;
             op.expect_unary()?;
             let rhs = Box::new(parse_expr(scan, _min)?);
-            Exp::Unary {
+            Expr::Unary {
                 op,
                 rhs,
             }
         }
-        Number(x)  => Exp::Value(x.into()),
-        Literal(x) => Exp::Value(x.into()),
-        Name(x) => Exp::Reference(x),
-        Keyword(True) => Exp::Value(true.into()),
-        Keyword(False) => Exp::Value(false.into()),
+        Number(x)  => Expr::Value(x.into()),
+        Literal(x) => Expr::Value(x.into()),
+        Name(x) => Expr::Reference(x),
+        Keyword(True) => Expr::Value(true.into()),
+        Keyword(False) => Expr::Value(false.into()),
         Keyword(If) => {
             let cond = Box::new(parse_expr(scan, 0)?);
             expect!(scan, Delim('{'))?; // {
@@ -129,7 +129,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             } else {
                 None
             };
-            Exp::If { cond, then, else_ }
+            Expr::If { cond, then, else_ }
         }
         Keyword(Else) => Err(Error::UnexpectedToken("".into(), tok))?,
         Keyword(While) => {
@@ -137,7 +137,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             expect!(scan, Delim('{'))?; // {
             let body = parse_seq(scan)?;
             expect!(scan, Delim('}'))?; // }
-            Exp::While { cond, body }
+            Expr::While { cond, body }
         }
         Keyword(ref key) => {
             let name = scan.next()?.name()?;
@@ -149,7 +149,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
                 Var => true,
                 _ => Err(Error::UnexpectedToken("Key or Let".into(), tok))?,
             };
-            Exp::Let {
+            Expr::Let {
                 name,
                 value,
                 ty,
@@ -160,7 +160,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
             // 1. If we see a ')' right after a '(', it's a tuple with no elements
             if let Delim(')') = scan.peek()?.token {
                 scan.next()?; // )
-                Exp::Tuple(vec![])
+                Expr::Tuple(vec![])
             } else {
                 let expr = parse_expr(scan, 0)?;
                 // 2. If we parse an expr, and then see a ',', it's a tuple with one or more elements
@@ -175,18 +175,18 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
                         exprs.push(parse_expr(scan, 0)?);
                     }
                     expect!(scan, Delim(')'))?;
-                    Exp::Tuple(exprs)
+                    Expr::Tuple(exprs)
                 } else {
                 // 3. If we parse an expr, and then only see a ')', it's a parenthesized expression
                     expect!(scan, Delim(')'))?;
-                    expr
+                    expr.expr
                 }
             }
         }
         Delim('[') => {
             if let Delim(']') = scan.peek()?.token {
                 scan.next()?; // ]
-                Exp::Array(vec![])
+                Expr::Array(vec![])
             } else {
                 let mut exprs = vec![];
                 exprs.push(parse_expr(scan, 0)?);
@@ -195,7 +195,7 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
                     exprs.push(parse_expr(scan, 0)?);
                 }
                 expect!(scan, Delim(']'))?;
-                Exp::Array(exprs)
+                Expr::Array(exprs)
             }
         }
         _ => Err(Error::UnexpectedToken("".into(), tok))?,
@@ -220,10 +220,10 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
                     break;
                 }
             }
-            expr = Exp::Call {
-                func: Box::new(expr),
+            expr = Expr::Call {
+                func: Box::new(expr.into()),
                 args,
-            };
+            }.into();
         } else {
             break;
         }
@@ -240,17 +240,17 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Exp, Error> {
         };
         op.expect_binary()?;
         let rhs = parse_expr(scan, op.prec() + op.assoc())?;
-        expr = Exp::Binary {
-            lhs: Box::new(expr),
+        expr = Expr::Binary {
+            lhs: Box::new(expr.into()),
             op,
             rhs: Box::new(rhs),
         };
     }
-    Ok(expr)
+    Ok(expr.into())
 }
 
 // As long as we see a semicolon, there's another expression
-pub fn parse_seq(scan: &mut Scanner) -> Result<Seq, Error> {
+pub fn parse_seq(scan: &mut Scanner) -> Result<Seq<()>, Error> {
     let mut exprs = vec![parse_expr(scan, 0)?];
     while matches!(scan.peek()?.token, Delim(';')) {
         scan.next()?;
@@ -263,7 +263,7 @@ pub fn parse_seq(scan: &mut Scanner) -> Result<Seq, Error> {
     Ok(Seq(exprs))
 }
 
-pub fn parse_func(scan: &mut Scanner) -> Result<Function, Error> {
+pub fn parse_func(scan: &mut Scanner) -> Result<Function<()>, Error> {
     expect!(scan, Keyword(Func))?;
     let name = scan.next()?.name()?;
     expect!(scan, Delim('('))?;
@@ -301,7 +301,7 @@ pub fn parse_func(scan: &mut Scanner) -> Result<Function, Error> {
     })
 }
 
-pub fn parse(src: &str) -> Result<Program, Error> {
+pub fn parse(src: &str) -> Result<Program<()>, Error> {
     let scan = &mut Scanner::new(src);
     let mut prgm = vec![];
     while !matches!(scan.peek()?.token, EOF)  {

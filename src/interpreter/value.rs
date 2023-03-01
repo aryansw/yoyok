@@ -1,16 +1,16 @@
-use crate::ast::ast::{Function, Size, Type};
+use crate::ast::ast::{Function, Size, Type, TypeBound};
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum Value {
+pub enum Value<T: TypeBound> {
     Signed(i64),
     Bool(bool),
     Char(char),
-    Tuple(Vec<Value>),
-    Array(Vec<Value>),
-    Function(Function),
+    Tuple(Vec<Value<T>>),
+    Array(Vec<Value<T>>),
+    Function(Function<T>),
 }
 
-impl Value {
+impl<T: TypeBound> Value<T> {
     pub fn type_of(&self) -> Type {
         match &self {
             Value::Signed(_) => Type::Signed(Size::ThirtyTwo),

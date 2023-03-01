@@ -1,14 +1,16 @@
 use std::fmt::Display;
 
-use super::ast::{Expression, Function, Operator, Program, Sequence, Size, Type, Value};
+use super::ast::{
+    Expr, Expression, Function, Operator, Program, Sequence, Size, Type, TypeBound, Value,
+};
 
-impl Display for Program {
+impl<T: TypeBound> Display for Program<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.iter().try_for_each(|func| write!(f, "{}", func))
     }
 }
 
-impl Display for Function {
+impl<T: TypeBound> Display for Function<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let args = self
             .args
@@ -25,7 +27,7 @@ impl Display for Function {
     }
 }
 
-impl Display for Sequence {
+impl<T: TypeBound> Display for Sequence<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut it = self.0.iter().peekable();
         while let Some(expr) = it.next() {
@@ -39,7 +41,13 @@ impl Display for Sequence {
     }
 }
 
-impl Display for Expression {
+impl<T: TypeBound> Display for Expression<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.expr)
+    }
+}
+
+impl<T: TypeBound> Display for Expr<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Value(v) => write!(f, "{}", v),
@@ -123,6 +131,7 @@ impl Display for Expression {
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Value::Number(x) if x < &0 => write!(f, "({})", x),
             Value::Number(x) => write!(f, "{}", x),
             Value::Bool(x) => write!(f, "{}", x),
             Value::Char(x) => write!(f, "'{}'", x.escape_default()),

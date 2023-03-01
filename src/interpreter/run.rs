@@ -1,13 +1,13 @@
 use super::env::Env;
 use super::{error::Error, value::Value};
 use crate::ast::ast::*;
-use crate::ast::ast::{self, Expression as Expr};
+use crate::ast::ast::{self};
 use anyhow::Context;
 use anyhow::Error as AnyError;
 
-pub fn run_program(prgm: Program) -> Result<(), AnyError> {
+pub fn run_program<T: TypeBound>(prgm: Program<T>) -> Result<(), AnyError> {
     let funcs = prgm.0;
-    let main: Function = funcs
+    let main: Function<T> = funcs
         .iter()
         .find(|func| func.name == "main")
         .cloned()
@@ -16,7 +16,7 @@ pub fn run_program(prgm: Program) -> Result<(), AnyError> {
         .expect(Type::Signed(Size::ThirtyTwo))
         .context("main() function should return i32")?;
     if main.args.len() != 0 {
-        Err(Error::ArgumentCountMismatch(0, main.args))?
+        Err(Error::ArgumentCountMismatch(0, main.args.clone()))?
     } else {
         let value = run_func(&main, Env::from_funcs(funcs))?;
         if let Value::Signed(val) = value {
@@ -34,11 +34,14 @@ pub fn run_program(prgm: Program) -> Result<(), AnyError> {
     }
 }
 
-fn run_func(curr: &Function, mut env: Env) -> Result<Value, AnyError> {
+fn run_func<T: TypeBound>(curr: &Function<T>, mut env: Env<T>) -> Result<Value<T>, AnyError> {
     run_exprs(&curr.body.0, &mut env)
 }
 
-fn run_exprs(exprs: &Vec<Expr>, env: &mut Env) -> Result<Value, AnyError> {
+fn run_exprs<T: TypeBound>(
+    exprs: &Vec<Expression<T>>,
+    env: &mut Env<T>,
+) -> Result<Value<T>, AnyError> {
     let mut val = Value::Signed(0);
     for expr in exprs {
         val = run_expr(&expr, env)?;
@@ -46,19 +49,19 @@ fn run_exprs(exprs: &Vec<Expr>, env: &mut Env) -> Result<Value, AnyError> {
     Ok(val)
 }
 
-fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
-    let val = match expr {
-        Expression::Unary { op, rhs } => {
+fn run_expr<T: TypeBound>(expr: &Expression<T>, env: &mut Env<T>) -> Result<Value<T>, AnyError> {
+    let val = match &expr.expr {
+        Expr::Unary { op, rhs } => {
             let val = run_expr(rhs, env)?;
             val.unary(op)?
         }
         // Remember that assign needs to be handled differently
-        Expression::Binary {
+        Expr::Binary {
             lhs,
             op: Operator::Assign,
             rhs,
         } => {
-            if let Expression::Reference(name) = lhs.as_ref() {
+            if let Expr::Reference(name) = &lhs.as_ref().expr {
                 let val = run_expr(rhs, env)?;
                 env.update(name, val)?;
                 Value::Tuple(vec![])
@@ -66,22 +69,21 @@ fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
                 Err(Error::InvalidAssignment(lhs.to_string()))?
             }
         }
-
-        Expression::Binary { lhs, op, rhs } => {
+        Expr::Binary { lhs, op, rhs } => {
             let lhs = run_expr(lhs, env)?;
             let rhs = run_expr(rhs, env)?;
             lhs.binary(op, &rhs)?
         }
-        Expression::Value(val) => match val {
+        Expr::Value(val) => match val {
             ast::Value::Number(x) => Value::Signed(*x),
             ast::Value::Bool(x) => Value::Bool(*x),
             ast::Value::Char(x) => Value::Char(*x),
             ast::Value::String(x) => Value::Array(x.chars().into_iter().map(Value::Char).collect()),
         },
-        Expression::Tuple(_) => todo!(),
-        Expression::Array(_) => todo!(),
-        Expression::Reference(x) => env.get(x)?,
-        Expression::Let {
+        Expr::Tuple(_) => todo!(),
+        Expr::Array(_) => todo!(),
+        Expr::Reference(x) => env.get(x)?,
+        Expr::Let {
             name,
             value,
             ty,
@@ -94,7 +96,7 @@ fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
             env.insert(name, val, *mutable);
             Value::Tuple(vec![])
         }
-        Expression::If { cond, then, else_ } => {
+        Expr::If { cond, then, else_ } => {
             let cond = run_expr(cond, env)?;
             if let Value::Bool(cond) = cond {
                 if cond {
@@ -108,7 +110,7 @@ fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
                 Err(Error::UnexpectedType(Type::Bool, cond.type_of()))?
             }
         }
-        Expression::Call { func, args } => {
+        Expr::Call { func, args } => {
             let func = run_expr(func, env)?;
             let args = args
                 .into_iter()
@@ -132,7 +134,7 @@ fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
                 ))?
             }
         }
-        Expression::While { cond, body } => {
+        Expr::While { cond, body } => {
             loop {
                 let cond = run_expr(cond, env)?;
                 if let Value::Bool(cond) = cond {
@@ -151,8 +153,8 @@ fn run_expr(expr: &Expression, env: &mut Env) -> Result<Value, AnyError> {
     Ok(val)
 }
 
-impl Value {
-    fn unary(&self, op: &Operator) -> Result<Value, AnyError> {
+impl<T: TypeBound> Value<T> {
+    fn unary(&self, op: &Operator) -> Result<Value<T>, AnyError> {
         match op {
             Operator::Not => {
                 let Value::Bool(x) = self else {
@@ -170,7 +172,7 @@ impl Value {
         }
     }
 
-    fn binary(&self, op: &Operator, rhs: &Value) -> Result<Value, AnyError> {
+    fn binary(&self, op: &Operator, rhs: &Value<T>) -> Result<Value<T>, AnyError> {
         let value = match (self, rhs) {
             (Value::Signed(x), Value::Signed(y)) => match op {
                 Operator::Add => Value::Signed(x + y),

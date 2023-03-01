@@ -2,6 +2,7 @@
 #![feature(let_chains)]
 #![feature(assert_matches)]
 #![feature(result_option_inspect)]
+#![feature(trivial_bounds)]
 
 use std::fs;
 

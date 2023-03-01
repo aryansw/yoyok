@@ -1,6 +1,6 @@
 use proptest::{option, prelude::*};
 
-use crate::ast::ast::{Expression, Operator, Sequence, Size, Type, Value};
+use crate::ast::ast::{Expr, Expression, Operator, Sequence, Size, Type, Value};
 
 use super::ast::{Function, Program};
 
@@ -27,9 +27,7 @@ fn arb_unary() -> impl Strategy<Value = Operator> {
 }
 
 fn arb_size() -> impl Strategy<Value = Size> {
-    prop_oneof![
-        Just(Size::ThirtyTwo),
-    ]
+    prop_oneof![Just(Size::ThirtyTwo),]
 }
 
 fn arb_type() -> impl Strategy<Value = Type> {
@@ -56,22 +54,23 @@ fn arb_opt_type() -> impl Strategy<Value = Option<Type>> {
     option::weighted(0.8, arb_type())
 }
 
-fn arb_expr() -> impl Strategy<Value = Expression> {
+fn arb_expr() -> impl Strategy<Value = Expression<()>> {
     let leaf = prop_oneof![
-        any::<u64>().prop_map(|x| Expression::Value(x.into())),
-        "[A-Z][a-zA-Z0-9]*".prop_map(Expression::Reference),
-        any::<bool>().prop_map(|x| Expression::Value(x.into())),
-        "[A-Z][a-zA-Z0-9]*".prop_map(|x| Expression::Value(Value::String(x))),
-        "[A-Z][a-zA-Z0-9]+".prop_map(|x| Expression::Value(Value::Char(x.chars().next().unwrap()))),
-    ];
+        any::<u64>().prop_map(|x| Expr::Value(x.into())),
+        "[A-Z][a-zA-Z0-9]*".prop_map(Expr::Reference),
+        any::<bool>().prop_map(|x| Expr::Value(x.into())),
+        "[A-Z][a-zA-Z0-9]*".prop_map(|x| Expr::Value(Value::String(x))),
+        "[A-Z][a-zA-Z0-9]+".prop_map(|x| Expr::Value(Value::Char(x.chars().next().unwrap()))),
+    ]
+    .prop_map(Expression::from);
     leaf.prop_recursive(12, 512, 12, |inner| {
         prop_oneof![
-            (arb_unary(), inner.clone()).prop_map(|(op, rhs)| Expression::Unary {
+            (arb_unary(), inner.clone()).prop_map(|(op, rhs)| Expr::Unary {
                 op,
                 rhs: Box::new(rhs)
             }),
             (inner.clone(), arb_binary(), inner.clone()).prop_map(|(lhs, op, rhs)| {
-                Expression::Binary {
+                Expr::Binary {
                     lhs: Box::new(lhs),
                     op,
                     rhs: Box::new(rhs),
@@ -84,7 +83,7 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
                 any::<bool>()
             )
                 .prop_map(|(name, ty, value, mutable)| {
-                    Expression::Let {
+                    Expr::Let {
                         name,
                         ty,
                         value: Box::new(value),
@@ -97,17 +96,17 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
                 prop::collection::vec(inner.clone(), 1..10).prop_map(Sequence)
             )
                 .prop_map(|(cond, then, else_)| {
-                    Expression::If {
+                    Expr::If {
                         cond: Box::new(cond),
                         then,
                         else_: Some(else_),
                     }
                 }),
-            prop::collection::vec(inner.clone(), 0..10).prop_map(Expression::Array),
-            prop::collection::vec(inner.clone(), 0..10).prop_map(Expression::Tuple),
+            prop::collection::vec(inner.clone(), 0..10).prop_map(Expr::Array),
+            prop::collection::vec(inner.clone(), 0..10).prop_map(Expr::Tuple),
             (inner.clone(), prop::collection::vec(inner.clone(), 0..10)).prop_map(
                 |(func, args)| {
-                    Expression::Call {
+                    Expr::Call {
                         func: Box::new(func),
                         args,
                     }
@@ -118,20 +117,21 @@ fn arb_expr() -> impl Strategy<Value = Expression> {
                 prop::collection::vec(inner.clone(), 1..10).prop_map(Sequence)
             )
                 .prop_map(|(cond, body)| {
-                    Expression::While {
+                    Expr::While {
                         cond: Box::new(cond),
                         body,
                     }
                 }),
         ]
+        .prop_map(Expression::from)
     })
 }
 
-fn arb_seq() -> impl Strategy<Value = Sequence> {
+fn arb_seq() -> impl Strategy<Value = Sequence<()>> {
     prop::collection::vec(arb_expr(), 1..10).prop_map(|seq| Sequence(seq))
 }
 
-fn arb_func() -> impl Strategy<Value = Function> {
+fn arb_func() -> impl Strategy<Value = Function<()>> {
     // name, args, ret and body
     (
         "[A-Z][a-zA-Z0-9]*",
@@ -156,7 +156,7 @@ fn arb_func() -> impl Strategy<Value = Function> {
         })
 }
 
-pub fn arb_prgm() -> impl Strategy<Value = Program> {
+pub fn arb_prgm() -> impl Strategy<Value = Program<()>> {
     prop::collection::vec(arb_func(), 1..10).prop_map(Program)
 }
 

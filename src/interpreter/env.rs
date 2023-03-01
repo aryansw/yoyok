@@ -6,12 +6,12 @@ use crate::ast::ast::*;
 use anyhow::Error as AnyError;
 
 #[derive(Debug)]
-pub struct Env {
-    vars: HashMap<String, (bool, Value)>,
-    funcs: HashMap<String, Function>,
+pub struct Env<T: TypeBound> {
+    vars: HashMap<String, (bool, Value<T>)>,
+    funcs: HashMap<String, Function<T>>,
 }
 
-impl Env {
+impl<T: TypeBound> Env<T> {
     pub fn new() -> Self {
         Self {
             vars: HashMap::new(),
@@ -19,7 +19,7 @@ impl Env {
         }
     }
 
-    pub fn from_funcs(funcs: Vec<Function>) -> Self {
+    pub fn from_funcs(funcs: Vec<Function<T>>) -> Self {
         let mut env = Self::new();
         for func in funcs {
             env.funcs.insert(func.name.clone(), func);
@@ -35,7 +35,7 @@ impl Env {
         }
     }
 
-    pub fn update(&mut self, name: &String, value: Value) -> Result<Value, AnyError> {
+    pub fn update(&mut self, name: &String, value: Value<T>) -> Result<Value<T>, AnyError> {
         if let Some((mutable, val)) = self.vars.get(name) {
             if val.type_of() != value.type_of() {
                 Err(Error::UnexpectedType(val.type_of(), value.type_of()))?
@@ -54,7 +54,7 @@ impl Env {
         }
     }
 
-    pub fn get(&self, name: &String) -> Result<Value, AnyError> {
+    pub fn get(&self, name: &String) -> Result<Value<T>, AnyError> {
         if let Some((_, val)) = self.vars.get(name) {
             Ok(val.clone())
         } else if let Some(func) = self.funcs.get(name) {
@@ -64,7 +64,7 @@ impl Env {
         }
     }
 
-    pub fn insert(&mut self, name: &String, value: Value, mutable: bool) {
+    pub fn insert(&mut self, name: &String, value: Value<T>, mutable: bool) {
         self.vars.insert(name.clone(), (mutable, value));
     }
 }

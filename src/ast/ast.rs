@@ -1,54 +1,68 @@
+use std::fmt::Display;
+
 use crate::parser::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Program(pub Vec<Function>);
+pub struct Program<T: TypeBound>(pub Vec<Function<T>>);
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Function {
+pub struct Function<T: TypeBound> {
     pub name: String,
     pub args: Vec<(String, Type)>,
     pub ret: Type,
-    pub body: Sequence,
+    pub body: Sequence<T>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Sequence(pub Vec<Expression>);
+pub struct Sequence<T: TypeBound>(pub Vec<Expression<T>>);
+
+impl From<Expr<()>> for Expression<()> {
+    fn from(expr: Expr<()>) -> Self {
+        Expression { expr, ty: () }
+    }
+}
 
 // TODO: It might be worth making this generic over the type of the expression,
 // so types can initially be optional, and then be inferred later.
 #[derive(Debug, Clone, PartialEq)]
-pub enum Expression {
+pub struct Expression<T: TypeBound> {
+    pub expr: Expr<T>,
+    pub ty: T,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Expr<T: TypeBound> {
     Unary {
         op: Operator,
-        rhs: Box<Expression>,
+        rhs: Box<Expression<T>>,
     },
     Binary {
-        lhs: Box<Expression>,
+        lhs: Box<Expression<T>>,
         op: Operator,
-        rhs: Box<Expression>,
+        rhs: Box<Expression<T>>,
     },
     Value(Value),
-    Tuple(Vec<Expression>),
-    Array(Vec<Expression>),
+    Tuple(Vec<Expression<T>>),
+    Array(Vec<Expression<T>>),
     Reference(String),
     Let {
         name: String,
-        value: Box<Expression>,
+        value: Box<Expression<T>>,
         ty: Option<Type>,
         mutable: bool,
     },
     If {
-        cond: Box<Expression>,
-        then: Sequence,
-        else_: Option<Sequence>,
+        cond: Box<Expression<T>>,
+        then: Sequence<T>,
+        else_: Option<Sequence<T>>,
     },
     Call {
-        func: Box<Expression>,
-        args: Vec<Expression>,
+        func: Box<Expression<T>>,
+        args: Vec<Expression<T>>,
     },
     While {
-        cond: Box<Expression>,
-        body: Sequence,
+        cond: Box<Expression<T>>,
+        body: Sequence<T>,
     },
 }
 
@@ -214,3 +228,13 @@ impl Into<Value> for bool {
         Value::Bool(self)
     }
 }
+
+// These are the types that programs can take up. They can either have no type assigned to them, or (after type inference) they need to have a type assigned to them.
+pub trait TypeBound
+where
+    Self: Sized + Clone + PartialEq + std::fmt::Debug,
+{
+}
+
+impl TypeBound for () {}
+impl TypeBound for Type {}
