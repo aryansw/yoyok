@@ -8,6 +8,7 @@
 
 // Crates
 use crate::error::Error;
+use ::log::debug;
 use ::log::info;
 use anyhow::Context;
 use anyhow::Error as AnyError;
@@ -62,7 +63,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Run program from string
 fn run_str(source: &str) -> Result<(), AnyError> {
     let ast = parse(source).context("Error while parsing")?;
+    debug!(
+        "{}\n{}",
+        "Untyped AST:".bright_yellow(),
+        format!("{}", ast).bright_cyan()
+    );
     let ast = infer(ast).context("Error while inferring types")?;
+    debug!(
+        "\n{}\n{}",
+        "Typed AST:".bright_yellow(),
+        format!("{}", ast).bright_cyan()
+    );
     run_program(ast).context("Error while running program")?;
     Ok(())
 }

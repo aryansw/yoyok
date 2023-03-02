@@ -1,6 +1,3 @@
-use colored::Colorize;
-use log::debug;
-
 use crate::{
     ast::tree::{Expr, Expression, Function, Operator, Program, Sequence as Seq},
     parser::error::Error,
@@ -294,11 +291,5 @@ pub fn parse(src: &str) -> Result<Program<()>, Error> {
     while !matches!(scan.peek()?.token, Eof) {
         prgm.push(parse_func(scan)?);
     }
-    let prgm = Program(prgm);
-    debug!(
-        "{}\n{}",
-        "AST:".bright_yellow(),
-        format!("{}", prgm).bright_cyan()
-    );
-    Ok(prgm)
+    Ok(Program(prgm))
 }

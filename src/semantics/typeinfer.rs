@@ -100,7 +100,7 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
             // Ensure that the types match
             lhs.ty
                 .expect(&rhs.ty)
-                .context("Binary operation type mismatch")?;
+                .context(format!("Assignment mismatch: {} = {}", lhs, rhs))?;
             // Ensure that the lhs is assignable
             if let Expr::Reference(name) = &lhs.expr {
                 if let Some(ty) = env.get_mut(name) {
@@ -124,7 +124,7 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
             // Ensure that the types match
             lhs.ty
                 .expect(&rhs.ty)
-                .context("Binary operation type mismatch")?;
+                .context(format!("Binary Operation mismatch: {} {} {}", lhs, op, rhs))?;
             Expr::Binary {
                 lhs: Box::new(lhs),
                 op,
@@ -167,7 +167,7 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
             Expr::Array(exprs)
         }
         Expr::Reference(x) => {
-            let ty = env
+            ty = env
                 .get(x.as_str())
                 .ok_or_else(|| Error::VariableNotFound(x.clone()))?
                 .clone();
