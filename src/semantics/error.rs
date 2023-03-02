@@ -9,4 +9,8 @@ pub enum Error {
     Redeclaration(Type, Type, String),
     #[error("Function '{0}' not found")]
     FunctionNotFound(String),
+    #[error("Variable '{0}' not found")]
+    VariableNotFound(String),
+    #[error("Expected Function but found '{0}'")]
+    ExpectedFunction(Type),
 }
