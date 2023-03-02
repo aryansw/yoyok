@@ -9,7 +9,7 @@ use crate::{
 };
 
 
-use crate::semantics::types::{Size, Type};
+use crate::semantics::types::Type;
 use super::scanner::Scanner;
 
 // Peek at the next token, and return an error if it doesn't match the pattern

@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::ast::tree::Operator;
-use crate::semantics::types::{Size, Type};
+use crate::semantics::types::Type;
 
 #[derive(Error, Debug)]
 pub enum Error {

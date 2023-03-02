@@ -8,20 +8,22 @@ use super::{
     types::{Size, Type},
 };
 
-type TypeEnv<'a> = HashMap<&'a str, Type>;
+type TypeEnv = HashMap<String, Type>;
 
 pub fn infer(prgm: Program<()>) -> Result<Program<Type>, AnyError> {
     let funcs = prgm.0;
-
     let mut env = TypeEnv::new();
     // Add the function types to the environment
-    for func in &funcs {
-        let ty = func.get_type();
-        // Ensure that the function names are unique
-        if let Some(ty1) = env.remove(func.name.as_str()) {
-            return Err(Error::Redeclaration(ty, ty1, func.name.clone()).into());
+    {
+        let borrow = &funcs;
+        for func in funcs.iter() {
+            let ty = func.get_type();
+            // Ensure that the function names are unique
+            if let Some(ty1) = env.remove(func.name.as_str()) {
+                return Err(Error::Redeclaration(ty, ty1, func.name.clone()).into());
+            }
+            env.insert(func.name.clone(), ty);
         }
-        env.insert(func.name.as_str(), ty);
     }
     // Ensure there's a main function
     if let Some(f) = env.get("main") {
@@ -36,13 +38,50 @@ pub fn infer(prgm: Program<()>) -> Result<Program<Type>, AnyError> {
     }
     // Infer the types of the functions, one by one
     let new_funcs: Vec<Function<Type>> = funcs
-        .iter()
-        .map(|f| infer_function(f, &env).context(format!("In function '{}'", f.name)))
+        .into_iter()
+        .map(|f| {
+            let name = f.name.clone();
+            infer_function(f, &env).context(format!("In function '{}'", name))
+        })
         .collect::<Result<Vec<Function<Type>>, AnyError>>()?;
     Ok(Program(new_funcs))
 }
 
-fn infer_function(func: &Function<()>, env: &TypeEnv) -> Result<Function<Type>, AnyError> {
+fn infer_function(func: Function<()>, env: &TypeEnv) -> Result<Function<Type>, AnyError> {
+    let mut new_env = env.clone();
+    for (name, ty) in &func.args {
+        new_env.insert(name.into(), ty.clone());
+    }
+    let new_body = infer_seq(func.body, &new_env)?;
+    let default = Type::unit();
+    let ret_ty = new_body.0.last().map_or(&default, |f| &f.ty);
+    ret_ty
+        .expect(&func.ret)
+        .context(format!("Return type mismatch for function {}", func.name))?;
+    Ok(Function {
+        name: func.name,
+        args: func.args,
+        ret: func.ret,
+        body: new_body,
+    })
+}
+
+fn infer_seq(seq: Sequence<()>, env: &TypeEnv) -> Result<Sequence<Type>, AnyError> {
+    let new_exprs = infer_exprs(seq.0, env)?;
+    Ok(Sequence(new_exprs))
+}
+
+fn infer_exprs(
+    exprs: Vec<Expression<()>>,
+    env: &TypeEnv,
+) -> Result<Vec<Expression<Type>>, AnyError> {
+    exprs
+        .into_iter()
+        .map(|e| infer_expr(e, env))
+        .collect::<Result<Vec<Expression<Type>>, AnyError>>()
+}
+
+fn infer_expr(expr: Expression<()>, env: &TypeEnv) -> Result<Expression<Type>, AnyError> {
     Err(anyhow!("Not implemented"))
 }
 
