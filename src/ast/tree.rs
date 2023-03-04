@@ -91,6 +91,8 @@ pub enum Operator {
     And,
     Or,
     Not,
+    TupleIndex(usize),
+    ArrayIndex,
 }
 
 impl Operator {
@@ -115,11 +117,11 @@ impl Operator {
     }
 
     fn is_binary(&self) -> bool {
-        !matches!(self, Self::Not)
+        !matches!(self, Self::Not | Self::TupleIndex(_))
     }
 
     fn is_unary(&self) -> bool {
-        matches!(self, Self::Not | Self::Sub)
+        matches!(self, Self::Not | Self::Sub | Self::TupleIndex(_))
     }
 
     pub fn expect_binary(&self) -> Result<(), Error> {

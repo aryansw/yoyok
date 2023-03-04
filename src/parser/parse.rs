@@ -194,27 +194,54 @@ fn parse_expr(scan: &mut Scanner, _min: u8) -> Result<Expression<()>, Error> {
         _ => Err(Error::UnexpectedToken("".into(), tok))?,
     };
 
-    // Function Application
-    while let Delim('(') = scan.peek()?.token {
-        scan.next()?; // (
-        let mut args = vec![];
-        loop {
-            if let Delim(')') = scan.peek()?.token {
-                scan.next()?; // )
-                break;
+
+    // Parse function application and array/tuple indexing
+    loop {
+        match scan.peek()?.token {
+            // Funciton Application
+            Delim('(') => {
+                scan.next()?; // (
+                let mut args = vec![];
+                loop {
+                    if let Delim(')') = scan.peek()?.token {
+                        scan.next()?; // )
+                        break;
+                    }
+                    args.push(parse_expr(scan, 0)?);
+                    if let Delim(',') = scan.peek()?.token {
+                        scan.next()?; // ,
+                    } else {
+                        expect!(scan, Delim(')'))?;
+                        break;
+                    }
+                }
+                expr = Expr::Call {
+                    func: Box::new(expr.into()),
+                    args,
+                };
             }
-            args.push(parse_expr(scan, 0)?);
-            if let Delim(',') = scan.peek()?.token {
-                scan.next()?; // ,
-            } else {
-                expect!(scan, Delim(')'))?;
-                break;
+            // Array Indexing
+            Delim('[') => {
+                scan.next()?; // [
+                let index = parse_expr(scan, 0)?;
+                expect!(scan, Delim(']'))?;
+                expr = Expr::Binary {
+                    lhs: Box::new(expr.into()),
+                    op: Operator::ArrayIndex,
+                    rhs: Box::new(index),
+                };
             }
+            // Tuple Access
+            Delim('.') => {
+                scan.next()?; // .
+                let index = scan.next()?.number()?;
+                expr = Expr::Unary {
+                    rhs: Box::new(expr.into()),
+                    op: Operator::TupleIndex(index as usize),
+                };
+            }
+            _ => break,
         }
-        expr = Expr::Call {
-            func: Box::new(expr.into()),
-            args,
-        };
     }
 
     // Operator Parsing (with Precedence Climbing)

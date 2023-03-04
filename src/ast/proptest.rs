@@ -22,11 +22,16 @@ fn arb_binary() -> impl Strategy<Value = Operator> {
         Just(Operator::Lte),
         Just(Operator::Gt),
         Just(Operator::Gte),
+        Just(Operator::ArrayIndex),
     ]
 }
 
 fn arb_unary() -> impl Strategy<Value = Operator> {
-    prop_oneof![Just(Operator::Not), Just(Operator::Sub)]
+    prop_oneof![
+        Just(Operator::Not),
+        Just(Operator::Sub),
+        any::<usize>().prop_map(Operator::TupleIndex),
+    ]
 }
 
 fn arb_size() -> impl Strategy<Value = Size> {

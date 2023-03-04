@@ -52,10 +52,17 @@ impl<T: TypeBound> Display for Expr<T> {
         match self {
             Self::Value(v) => write!(f, "{}", v),
             Self::Reference(s) => write!(f, "{}", s),
+            Self::Unary {
+                op: Operator::TupleIndex(i),
+                rhs,
+            } => write!(f, "{}.{}", rhs, i),
             Self::Unary { op, rhs } => write!(f, "({}{})", op, rhs),
             Self::Binary { lhs, op, rhs } => match op {
                 Operator::Assign => {
                     write!(f, "{} {} {}", lhs, op, rhs)
+                }
+                Operator::ArrayIndex => {
+                    write!(f, "{}[{}]", lhs, rhs)
                 }
                 _ => write!(f, "({} {} {})", lhs, op, rhs),
             },
@@ -157,6 +164,7 @@ impl Display for Operator {
             Operator::And => write!(f, "&&"),
             Operator::Or => write!(f, "||"),
             Operator::Not => write!(f, "!"),
+            Operator::ArrayIndex | Operator::TupleIndex(_) => Err(std::fmt::Error),
         }
     }
 }

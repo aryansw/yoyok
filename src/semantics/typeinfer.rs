@@ -262,6 +262,7 @@ fn infer_op(op: Operator, expr: &Expression<Type>) -> Result<Type, AnyError> {
             expr.ty.expect(&Type::Bool)?;
             Ok(Type::Bool)
         }
+        _ => todo!(),
     }
 }
 

@@ -1,6 +1,7 @@
 # Pending Work
 
 ## References for Arrays and Tuples
+  - To first implement this, ensure the Parser can parse references to arrays and tuples
   - Refactor the values in [value.rs](value.rs) to be references to the actual locations in the environment, instead of the values themselves
   - Even references themselves return a "pointer" to the memory location of the reference
   - Binary operations are allowed to implicitly dereference the references
