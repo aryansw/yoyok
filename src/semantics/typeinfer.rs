@@ -253,12 +253,15 @@ fn infer_op(op: Operator, expr: &Expression<Type>) -> Result<Type, AnyError> {
             Ok(Type::Signed(Size::ThirtyTwo))
         }
         Operator::Assign => Ok(expr.ty.clone()),
-        Operator::Eq | Operator::Neq | _ => Ok(Type::Bool),
-        Operator::Lte => todo!(),
-        Operator::Gte => todo!(),
-        Operator::And => todo!(),
-        Operator::Or => todo!(),
-        Operator::Not => todo!(),
+        Operator::Eq | Operator::Neq => Ok(Type::Bool),
+        Operator::Lte | Operator::Gt | Operator::Gte | Operator::Lt => {
+            expr.ty.expect(&Type::Signed(Size::ThirtyTwo))?;
+            Ok(Type::Bool)
+        }
+        Operator::And | Operator::Or | Operator::Not => {
+            expr.ty.expect(&Type::Bool)?;
+            Ok(Type::Bool)
+        }
     }
 }
 

@@ -5,9 +5,8 @@ use crate::{
     parser::tokens::TokenType::*,
 };
 
-
-use crate::semantics::types::Type;
 use super::scanner::Scanner;
+use crate::semantics::types::Type;
 
 // Peek at the next token, and return an error if it doesn't match the pattern
 macro_rules! expect {

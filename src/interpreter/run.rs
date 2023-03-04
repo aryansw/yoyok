@@ -1,7 +1,7 @@
 use super::env::Env;
 use super::{error::Error, value::Value};
+use crate::ast::tree;
 use crate::ast::tree::*;
-use crate::ast::tree::{self};
 use crate::semantics::types::{Size, Type};
 use anyhow::Context;
 use anyhow::Error as AnyError;

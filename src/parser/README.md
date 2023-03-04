@@ -20,7 +20,9 @@
          | '(' <expr> ')'
          | <value>
          | '[' [<expr> ',']* ']'
-         | <ident>
+         | <ident> 
+         | <expr> '[' <expr> ']'
+         | <expr> '.' <num>
          | let <ident> [: <type>] '=' <expr>
          | var <ident> [: <type>] '=' <expr>
          | if <expr> '{' <seq> '}' else '{' <seq> '}'
