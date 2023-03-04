@@ -78,56 +78,116 @@ fn infer_exprs(
         .collect::<Result<Vec<Expression<Type>>, AnyError>>()
 }
 
+fn infer_unary(op: Operator, rhs: &Expression<Type>) -> Result<Type, AnyError> {
+    let ty = &rhs.ty;
+    match op {
+        Operator::Not => {
+            ty.expect(&Type::Bool)
+                .context("Unary negation on non-boolean")?;
+
+            Ok(Type::Bool)
+        }
+        Operator::Sub => {
+            ty.expect(&Type::Signed(Size::ThirtyTwo))
+                .context("Unary negation on non-integer")?;
+            Ok(Type::Signed(Size::ThirtyTwo))
+        }
+        Operator::TupleIndex(i) => {
+            if let Type::Tuple(tys) = ty.open_ref() {
+                if i >= tys.len() {
+                    Err(Error::InvalidTupleIndex(ty.clone()))?
+                } else {
+                    Ok(Type::Reference(Box::new(tys[i].clone())))
+                }
+            } else {
+                Err(Error::InvalidTupleIndex(ty.clone()))?
+            }
+        }
+        Operator::Ref => Ok(Type::Reference(Box::new(ty.clone()))),
+        Operator::Mul => {
+            if let Type::Reference(ty) = ty {
+                Ok(*ty.clone())
+            } else {
+                Err(Error::InvalidDereference(ty.clone()))?
+            }
+        }
+        _ => Err(anyhow!("Invalid unary operator {:?}", op)),
+    }
+}
+
+fn infer_binary(
+    op: Operator,
+    lhs: &mut Expression<Type>,
+    rhs: &Expression<Type>,
+) -> Result<Type, AnyError> {
+    let lhs_ty = &lhs.ty;
+    let rhs_ty = &rhs.ty;
+    match op {
+        Operator::Assign => {
+            if let Type::Reference(ty) = lhs_ty {
+                rhs_ty
+                    .expect(ty)
+                    .context("Invalid operand types for assignment")?;
+                lhs.ty = lhs_ty.pop_ref().clone();
+                Ok(Type::unit())
+            } else {
+                Err(Error::InvalidDereference(lhs_ty.clone()))?
+            }
+        }
+        Operator::ArrayIndex => {
+            if let Type::Array(ty, _) = lhs_ty.open_ref() {
+                rhs_ty
+                    .expect(&Type::Signed(Size::ThirtyTwo))
+                    .context("Invalid operand type for array indexing")?;
+                Ok(Type::Reference(ty.clone()))
+            } else {
+                Err(Error::InvalidArrayIndex(lhs_ty.clone()))?
+            }
+        }
+        op if op.is_arith() => {
+            lhs_ty
+                .expect(rhs_ty)
+                .context("Invalid operand types for arithmetic operator")?;
+            lhs_ty
+                .expect(&Type::Signed(Size::ThirtyTwo))
+                .context("Invalid operand type for arithmetic operator")?;
+            Ok(Type::Signed(Size::ThirtyTwo))
+        }
+        op if op.is_comparison() => {
+            lhs_ty
+                .expect(&Type::Signed(Size::ThirtyTwo))
+                .context("Invalid operand type for comparison operator")?;
+            Ok(Type::Bool)
+        }
+        op if op.is_logical() => {
+            lhs_ty
+                .expect(&Type::Bool)
+                .context("Invalid operand type for logical operator")?;
+            Ok(Type::Bool)
+        }
+        _ => Err(anyhow!("Invalid binary operator {:?}", op)),
+    }
+}
+
 fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type>, AnyError> {
     let mut ty = Type::unit();
     let expr = match expr.expr {
         Expr::Unary { op, rhs } => {
             let rhs = infer_expr(*rhs, env)?;
-            ty = infer_op(op, &rhs)?;
+            ty = infer_unary(op, &rhs).context(format!("On unary expression: ({} {})", op, rhs))?;
             Expr::Unary {
                 op,
                 rhs: Box::new(rhs),
             }
         }
-        Expr::Binary {
-            lhs,
-            op: Operator::Assign,
-            rhs,
-        } => {
-            let lhs = infer_expr(*lhs, env)?;
+        Expr::Binary { op, lhs, rhs } => {
+            let mut lhs = infer_expr(*lhs, env)?;
             let rhs = infer_expr(*rhs, env)?;
-            ty = rhs.ty.clone();
-            // Ensure that the types match
-            lhs.ty
-                .expect(&rhs.ty)
-                .context(format!("Assignment mismatch: {} = {}", lhs, rhs))?;
-            // Ensure that the lhs is assignable
-            if let Expr::Reference(name) = &lhs.expr {
-                if let Some(ty) = env.get_mut(name) {
-                    *ty = rhs.ty.clone();
-                } else {
-                    return Err(Error::VariableNotFound(name.clone()).into());
-                }
-            } else {
-                return Err(anyhow!("Invalid assignment"));
-            }
+            ty = infer_binary(op, &mut lhs, &rhs)
+                .context(format!("On binary expression: ({} {} {})", lhs, op, rhs))?;
             Expr::Binary {
-                lhs: Box::new(lhs),
-                op: Operator::Assign,
-                rhs: Box::new(rhs),
-            }
-        }
-        Expr::Binary { lhs, op, rhs } => {
-            let lhs = infer_expr(*lhs, env)?;
-            let rhs = infer_expr(*rhs, env)?;
-            ty = infer_op(op, &lhs)?;
-            // Ensure that the types match
-            lhs.ty
-                .expect(&rhs.ty)
-                .context(format!("Binary Operation mismatch: {} {} {}", lhs, op, rhs))?;
-            Expr::Binary {
-                lhs: Box::new(lhs),
                 op,
+                lhs: Box::new(lhs),
                 rhs: Box::new(rhs),
             }
         }
@@ -171,6 +231,8 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
                 .get(x.as_str())
                 .ok_or_else(|| Error::VariableNotFound(x.clone()))?
                 .clone();
+            // Wrap the type in a reference
+            ty = Type::Reference(Box::new(ty));
             Expr::Reference(x)
         }
         Expr::Let {
@@ -183,6 +245,9 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
             ty = opt_ty.unwrap_or(value.ty.clone());
             ty.expect(&value.ty)
                 .context(format!("Type mismatch for variable '{}'", name))?;
+            if env.contains_key(name.as_str()) {
+                Err(Error::RedeclarationVariable(name.clone()))?
+            }
             env.insert(name.clone(), ty.clone());
             Expr::Let {
                 name,
@@ -243,27 +308,8 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
             }
         }
     };
+    println!("Env: {:?}", env);
     Ok(Expression { expr, ty })
-}
-
-fn infer_op(op: Operator, expr: &Expression<Type>) -> Result<Type, AnyError> {
-    match op {
-        Operator::Add | Operator::Sub | Operator::Mul | Operator::Div => {
-            expr.ty.expect(&Type::Signed(Size::ThirtyTwo))?;
-            Ok(Type::Signed(Size::ThirtyTwo))
-        }
-        Operator::Assign => Ok(expr.ty.clone()),
-        Operator::Eq | Operator::Neq => Ok(Type::Bool),
-        Operator::Lte | Operator::Gt | Operator::Gte | Operator::Lt => {
-            expr.ty.expect(&Type::Signed(Size::ThirtyTwo))?;
-            Ok(Type::Bool)
-        }
-        Operator::And | Operator::Or | Operator::Not => {
-            expr.ty.expect(&Type::Bool)?;
-            Ok(Type::Bool)
-        }
-        _ => todo!(),
-    }
 }
 
 impl<T: TypeBound> Function<T> {
@@ -284,10 +330,26 @@ impl<T: TypeBound> Function<T> {
 impl Type {
     // A strict equality check
     fn expect(&self, ty: &Type) -> Result<(), AnyError> {
-        if self == ty {
+        if self.open_ref() == ty.open_ref() {
             Ok(())
         } else {
             Err(Error::UnexpectedType(self.clone(), ty.clone()).into())
+        }
+    }
+
+    // Unpacks references if needed
+    fn open_ref(&self) -> &Type {
+        match self {
+            Type::Reference(ty) => ty.open_ref(),
+            _ => self,
+        }
+    }
+
+    // Uses just one reference
+    fn pop_ref(&self) -> &Type {
+        match self {
+            Type::Reference(ty) => ty,
+            _ => self,
         }
     }
 }

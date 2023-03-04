@@ -79,7 +79,7 @@ pub enum Value {
 pub enum Operator {
     Add,
     Sub,
-    Mul,
+    Mul, // if it's unary, it's a deref
     Div,
     Assign,
     Gt,
@@ -95,7 +95,6 @@ pub enum Operator {
     TupleIndex(usize),
     ArrayIndex,
     Ref,
-    Deref,
 }
 
 impl Operator {

@@ -31,7 +31,7 @@ fn arb_unary() -> impl Strategy<Value = Operator> {
         Just(Operator::Not),
         Just(Operator::Sub),
         Just(Operator::Ref),
-        Just(Operator::Deref),
+        Just(Operator::Mul),
         any::<usize>().prop_map(Operator::TupleIndex),
     ]
 }
