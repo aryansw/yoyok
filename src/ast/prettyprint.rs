@@ -199,6 +199,7 @@ impl Display for Type {
                 write!(f, "{} -> {}", Type::Tuple(args.to_vec()), ret)
             }
             Type::Reference(ty) => write!(f, "&{}", ty),
+            Type::Mutable(ty) => write!(f, "!{}", ty),
         }
     }
 }

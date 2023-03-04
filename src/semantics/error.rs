@@ -5,6 +5,8 @@ use thiserror::Error;
 pub enum Error {
     #[error("Unexpected Type: expected '{0}' but found '{1}'")]
     UnexpectedType(Type, Type),
+    #[error("Not mutable: '{0}' is not mutable")]
+    NotMutable(Type),
     #[error("Redeclaration of function '{2}' with types: '{0}' and {1}")]
     Redeclaration(Type, Type, String),
     #[error("Redeclaration of variable '{0}'")]

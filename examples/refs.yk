@@ -1,0 +1,8 @@
+fn main() -> i32 {
+    let x = 10;
+    let z = &x;
+    var q = x + *z;
+    q = 123;
+    let r = q + 13;
+    q
+}

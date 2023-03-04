@@ -84,7 +84,6 @@ fn infer_unary(op: Operator, rhs: &Expression<Type>) -> Result<Type, AnyError> {
         Operator::Not => {
             ty.expect(&Type::Bool)
                 .context("Unary negation on non-boolean")?;
-
             Ok(Type::Bool)
         }
         Operator::Sub => {
@@ -92,25 +91,25 @@ fn infer_unary(op: Operator, rhs: &Expression<Type>) -> Result<Type, AnyError> {
                 .context("Unary negation on non-integer")?;
             Ok(Type::Signed(Size::ThirtyTwo))
         }
-        Operator::TupleIndex(i) => {
-            if let Type::Tuple(tys) = ty.open_ref() {
+        Operator::TupleIndex(i) => ty.map_mut(|ty| {
+            if let Type::Tuple(tys) = ty {
                 if i >= tys.len() {
                     Err(Error::InvalidTupleIndex(ty.clone()))?
                 } else {
-                    Ok(Type::Reference(Box::new(tys[i].clone())))
+                    Ok(tys[i].clone())
                 }
             } else {
                 Err(Error::InvalidTupleIndex(ty.clone()))?
             }
-        }
-        Operator::Ref => Ok(Type::Reference(Box::new(ty.clone()))),
-        Operator::Mul => {
+        }),
+        Operator::Ref => ty.map_mut(|ty| Ok(Type::Reference(Box::new(ty.clone())))),
+        Operator::Mul => ty.map_mut(|ty| {
             if let Type::Reference(ty) = ty {
                 Ok(*ty.clone())
             } else {
                 Err(Error::InvalidDereference(ty.clone()))?
             }
-        }
+        }),
         _ => Err(anyhow!("Invalid unary operator {:?}", op)),
     }
 }
@@ -124,26 +123,26 @@ fn infer_binary(
     let rhs_ty = &rhs.ty;
     match op {
         Operator::Assign => {
-            if let Type::Reference(ty) = lhs_ty {
+            if let Type::Mutable(ty) = lhs_ty {
                 rhs_ty
                     .expect(ty)
                     .context("Invalid operand types for assignment")?;
-                lhs.ty = lhs_ty.pop_ref().clone();
+                lhs.ty = *ty.clone();
                 Ok(Type::unit())
             } else {
-                Err(Error::InvalidDereference(lhs_ty.clone()))?
+                Err(Error::NotMutable(lhs_ty.clone()))?
             }
         }
-        Operator::ArrayIndex => {
-            if let Type::Array(ty, _) = lhs_ty.open_ref() {
+        Operator::ArrayIndex => lhs_ty.map_mut(|ty| {
+            if let Type::Array(ty, _) = ty {
                 rhs_ty
                     .expect(&Type::Signed(Size::ThirtyTwo))
-                    .context("Invalid operand type for array indexing")?;
-                Ok(Type::Reference(ty.clone()))
+                    .context("Invalid index type for array")?;
+                Ok(*ty.clone())
             } else {
-                Err(Error::InvalidArrayIndex(lhs_ty.clone()))?
+                Err(Error::InvalidArrayIndex(ty.clone()))?
             }
-        }
+        }),
         op if op.is_arith() => {
             lhs_ty
                 .expect(rhs_ty)
@@ -231,8 +230,6 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
                 .get(x.as_str())
                 .ok_or_else(|| Error::VariableNotFound(x.clone()))?
                 .clone();
-            // Wrap the type in a reference
-            ty = Type::Reference(Box::new(ty));
             Expr::Reference(x)
         }
         Expr::Let {
@@ -242,17 +239,29 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
             mutable,
         } => {
             let value = infer_expr(*value, env)?;
-            ty = opt_ty.unwrap_or(value.ty.clone());
-            ty.expect(&value.ty)
-                .context(format!("Type mismatch for variable '{}'", name))?;
+            let value_ty = value.ty.pop_mut().clone();
+            let ty = if let Some(ty) = opt_ty {
+                ty.expect(&value_ty)
+                    .context(format!("Type mismatch for variable '{}'", name))?;
+                ty
+            } else {
+                value_ty
+            };
             if env.contains_key(name.as_str()) {
                 Err(Error::RedeclarationVariable(name.clone()))?
             }
+            // Wrap this in a mutable if it can be reassigned later
+            let ty = if mutable {
+                Type::Mutable(Box::new(ty))
+            } else {
+                ty
+            };
+
             env.insert(name.clone(), ty.clone());
             Expr::Let {
                 name,
                 value: Box::new(value),
-                ty: Some(ty.clone()),
+                ty: Some(ty),
                 mutable,
             }
         }
@@ -308,7 +317,6 @@ fn infer_expr(expr: Expression<()>, env: &mut TypeEnv) -> Result<Expression<Type
             }
         }
     };
-    println!("Env: {:?}", env);
     Ok(Expression { expr, ty })
 }
 
@@ -330,17 +338,17 @@ impl<T: TypeBound> Function<T> {
 impl Type {
     // A strict equality check
     fn expect(&self, ty: &Type) -> Result<(), AnyError> {
-        if self.open_ref() == ty.open_ref() {
+        if self.pop_mut() == ty.pop_mut() {
             Ok(())
         } else {
             Err(Error::UnexpectedType(self.clone(), ty.clone()).into())
         }
     }
 
-    // Unpacks references if needed
-    fn open_ref(&self) -> &Type {
+    // Unpacks mutable values
+    fn pop_mut(&self) -> &Type {
         match self {
-            Type::Reference(ty) => ty.open_ref(),
+            Type::Mutable(ty) => ty,
             _ => self,
         }
     }
@@ -350,6 +358,27 @@ impl Type {
         match self {
             Type::Reference(ty) => ty,
             _ => self,
+        }
+    }
+
+    // Wraps the type in a mutable reference if the type is mutable
+    fn map_mut(&self, f: impl FnOnce(&Type) -> Result<Type, AnyError>) -> Result<Type, AnyError> {
+        match self {
+            Type::Mutable(ty) => {
+                let ty = f(ty)?;
+
+                match ty {
+                    // if the type is a composite type, we lose the mutability
+                    // This fix prevents mutable nested values from being created
+                    // To actually fix this, we need to add a new type for non-mutable values
+                    Type::Array(_, _) | Type::Tuple(_) => Ok(ty),
+                    // if the type is already mutable, we don't need to wrap it again
+                    Type::Mutable(_) => Ok(ty),
+                    _ => Ok(Type::Mutable(Box::new(ty))),
+                }
+            }
+
+            _ => f(self),
         }
     }
 }

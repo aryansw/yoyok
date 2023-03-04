@@ -1,11 +1,17 @@
 fn main() -> i32 {
-    let arr = [1, 2, 3, 4, 5];
-    let q = arr[0];
-    var tuple = (24, arr, 'a', main);
-    let s = tuple.1[2];
-    tuple.0 = 10;
-    let r = &tuple.0;
-    let z = *r;
-    let n = 10;
-    * *z
+  var arr = [1, 2, 3, 4, 5];
+  let q = (&arr[0]);
+  var tuple = (24, arr, 'a', main);
+  let s = 20;
+  tuple.0 = 10;
+  let r = (&tuple.0);
+  let z= (*r);
+  let n = 10;
+  tuple.3 = foo;
+  tuple.1[345] = 34; # Clearly a bug
+  z
+}
+
+fn foo() -> i32 {
+    10
 }

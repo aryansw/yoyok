@@ -7,6 +7,8 @@ pub enum Type {
     Array(Box<Type>, usize),
     Function { args: Vec<Type>, ret: Box<Type> },
     Reference(Box<Type>),
+    // Hidden type that's used to present a mutable value
+    Mutable(Box<Type>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

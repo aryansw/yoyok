@@ -3,6 +3,7 @@
 #![feature(assert_matches)]
 #![feature(result_option_inspect)]
 #![feature(trivial_bounds)]
+#![feature(box_patterns)]
 // Cargo Clippy settings
 #![allow(dead_code, unused_variables)]
 
