@@ -95,6 +95,7 @@ pub enum Operator {
     TupleIndex(usize),
     ArrayIndex,
     Ref,
+    Deref,
 }
 
 impl Operator {
@@ -126,7 +127,7 @@ impl Operator {
     fn is_unary(&self) -> bool {
         matches!(
             self,
-            Self::Not | Self::Sub | Self::TupleIndex(_) | Self::Ref
+            Self::Not | Self::Sub | Self::TupleIndex(_) | Self::Ref | Operator::Mul
         )
     }
 

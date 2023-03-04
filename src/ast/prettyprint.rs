@@ -165,6 +165,7 @@ impl Display for Operator {
             Operator::Or => write!(f, "||"),
             Operator::Not => write!(f, "!"),
             Operator::Ref => write!(f, "&"),
+            Operator::Deref => write!(f, "*"),
             Operator::ArrayIndex | Operator::TupleIndex(_) => Err(std::fmt::Error),
         }
     }

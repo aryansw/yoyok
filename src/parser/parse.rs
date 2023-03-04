@@ -74,9 +74,17 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
             expect!(scan, Delim(']'))?;
             Type::Array(Box::new(ty), size as usize)
         }
-        Op(ref x) if matches!(x[..], ['&']) => {
-            let ty = parse_type(scan)?;
-            Type::Reference(Box::new(ty))
+        Op(ref x) => {
+            // Ensure all x's are &
+            if x.iter().any(|x| *x != '&') {
+                return Err(Error::InvalidType(tok));
+            }
+            // Box the type as many times as there are &'s
+            let mut ty = parse_type(scan)?;
+            for _ in 0..x.len() {
+                ty = Type::Reference(Box::new(ty));
+            }
+            ty
         }
         _ => return Err(Error::InvalidType(tok)),
     };
