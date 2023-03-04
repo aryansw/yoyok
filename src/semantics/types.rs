@@ -6,6 +6,7 @@ pub enum Type {
     Tuple(Vec<Type>),
     Array(Box<Type>, usize),
     Function { args: Vec<Type>, ret: Box<Type> },
+    Reference(Box<Type>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

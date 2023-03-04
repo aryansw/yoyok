@@ -164,6 +164,7 @@ impl Display for Operator {
             Operator::And => write!(f, "&&"),
             Operator::Or => write!(f, "||"),
             Operator::Not => write!(f, "!"),
+            Operator::Ref => write!(f, "&"),
             Operator::ArrayIndex | Operator::TupleIndex(_) => Err(std::fmt::Error),
         }
     }
@@ -196,6 +197,7 @@ impl Display for Type {
             Type::Function { args, ret } => {
                 write!(f, "{} -> {}", Type::Tuple(args.to_vec()), ret)
             }
+            Type::Reference(ty) => write!(f, "&{}", ty),
         }
     }
 }

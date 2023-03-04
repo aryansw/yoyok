@@ -1,5 +1,6 @@
 fn main() -> i32 {
     let arr = [1, 2, 3, 4, 5];
     var tuple = (24, arr, 'a');
+    let q: &i32 = &tuple.1[2];
     0
 }

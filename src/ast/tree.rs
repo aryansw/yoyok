@@ -91,8 +91,10 @@ pub enum Operator {
     And,
     Or,
     Not,
+    // Fun pointer stuff
     TupleIndex(usize),
     ArrayIndex,
+    Ref,
 }
 
 impl Operator {
@@ -112,16 +114,20 @@ impl Operator {
             ['&', '&'] => Operator::And,
             ['|', '|'] => Operator::Or,
             ['!'] => Operator::Not,
+            ['&'] => Operator::Ref,
             _ => return Err(Error::InvalidOperator(op.iter().collect())),
         })
     }
 
     fn is_binary(&self) -> bool {
-        !matches!(self, Self::Not | Self::TupleIndex(_))
+        !matches!(self, Self::Not | Self::TupleIndex(_) | Self::Ref)
     }
 
     fn is_unary(&self) -> bool {
-        matches!(self, Self::Not | Self::Sub | Self::TupleIndex(_))
+        matches!(
+            self,
+            Self::Not | Self::Sub | Self::TupleIndex(_) | Self::Ref
+        )
     }
 
     pub fn expect_binary(&self) -> Result<(), Error> {

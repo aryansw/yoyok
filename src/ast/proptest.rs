@@ -30,6 +30,7 @@ fn arb_unary() -> impl Strategy<Value = Operator> {
     prop_oneof![
         Just(Operator::Not),
         Just(Operator::Sub),
+        Just(Operator::Ref),
         any::<usize>().prop_map(Operator::TupleIndex),
     ]
 }
@@ -48,6 +49,7 @@ fn arb_type() -> impl Strategy<Value = Type> {
         prop_oneof![
             prop::collection::vec(inner.clone(), 1..4).prop_map(Type::Tuple),
             (inner.clone(), any::<usize>()).prop_map(|(ty, size)| Type::Array(Box::new(ty), size)),
+            inner.clone().prop_map(|ty| Type::Reference(Box::new(ty))),
             (prop::collection::vec(inner.clone(), 1..4), inner).prop_map(|(args, ret)| {
                 Type::Function {
                     args,

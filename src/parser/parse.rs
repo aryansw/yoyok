@@ -74,6 +74,10 @@ fn parse_type(scan: &mut Scanner) -> Result<Type, Error> {
             expect!(scan, Delim(']'))?;
             Type::Array(Box::new(ty), size as usize)
         }
+        Op(ref x) if matches!(x[..], ['&']) => {
+            let ty = parse_type(scan)?;
+            Type::Reference(Box::new(ty))
+        }
         _ => return Err(Error::InvalidType(tok)),
     };
     if let Op(x) = scan.peek()?.token && let ['-', '>'] = x[..] {
