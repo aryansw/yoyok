@@ -370,7 +370,7 @@ impl Type {
                 match ty {
                     // if the type is a composite type, we lose the mutability
                     // This fix prevents mutable nested values from being created
-                    // To actually fix this, we need to add a new type for non-mutable values
+                    // To support this properly, we would need to add a new type for non-mutable values
                     Type::Array(_, _) | Type::Tuple(_) => Ok(ty),
                     // if the type is already mutable, we don't need to wrap it again
                     Type::Mutable(_) => Ok(ty),
