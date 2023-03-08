@@ -14,19 +14,39 @@ Just a list of references and helpful notes for this project.
 
 ## Linear/Affine Types
  - [Towards Formal Semantics for Rust (Theses)](https://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=3804&context=theses)
- - [Krust Formal Semantics for Rust (It's 9 pages so it's really easy to grasp)](https://arxiv.org/pdf/1804.10806.pdf)
+ - [**Katina: Formalization of Rust**](https://dada.cs.washington.edu/research/tr/2015/03/UW-CSE-15-03-02.pdf)
+ - [**Termination of Borrow Checking in Rust**](https://whileydave.com/publications/PPS22_NFM_preprint.pdf)
+ - [RustBelt: Securing foundations of Rust](https://people.mpi-sws.org/~dreyer/papers/rustbelt/paper.pdf)
+ - [**Krust Formal Semantics for Rust**](https://arxiv.org/pdf/1804.10806.pdf)
  - [Oxide: The Essence of Rust](https://arxiv.org/pdf/1903.00982.pdf)
    - Sequel to: [Rust Distilled](https://arxiv.org/pdf/1806.02693.pdf)
  - [Practical Affine Types](https://users.cs.northwestern.edu/~jesse/pubs/alms/tovpucella-alms.pdf)
  - [Linear Types can change the world](https://cs.ioc.ee/ewscs/2010/mycroft/linear-2up.pdf)
+ - [Linear Typing of CPS](https://core.ac.uk/download/pdf/30696825.pdf)
 
-## Typing Coroutines
-  - https://proglang.informatik.uni-freiburg.de/projects/coroutines/TFP2010-ext.pdf
-  - https://core.ac.uk/download/pdf/30696825.pdf
+## Typing Coroutines 
+  - [Typing Coroutines](https://proglang.informatik.uni-freiburg.de/projects/coroutines/TFP2010-ext.pdf)
+  - [**Implementing Stackful Typesafe Routines in Scala**](https://drops.dagstuhl.de/opus/volltexte/2018/9208/pdf/LIPIcs-ECOOP-2018-3.pdf)
+    - First-class, Symmetric, Stackful, Typesafe Coroutines
+    - Snapshots to clone coroutines whenever necessary
+    - [Video](https://www.youtube.com/watch?v=B3hKOUtc4e0)
+  - [Soundness of Coroutines with Snapshots](https://arxiv.org/pdf/1806.01405.pdf)
+
+## Coroutines Explained
+  - [**Revisiting Coroutines**](https://citeseer.ist.psu.edu/viewdoc/download;jsessionid=13883E22B46E5495E3BC3600A3895DA5?doi=10.1.1.58.4017&rep=rep1&type=pdf)
+    - Classifies different types of coroutines, makes a case for assymmetric stackful first-class coroutines, i.e, Full Coroutines.
+
+## Coroutine Implementation
+  - [Unifying syntax for Stackless and Stackful Coroutines](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4398.pdf)
+  - [Coroutines with High Order functions](https://arxiv.org/pdf/1812.08278.pdf)
+  - [Context Crate](https://docs.rs/context/latest/context/)
+  - [Boost Coroutines](https://www.boost.org/doc/libs/1_75_0/libs/coroutine/doc/html/index.html)
+
+## Course Materials
+  - [CS 164: Hack your Language](https://sites.google.com/a/bodik.org/cs164/)
+  - [CS 242: Linear Types](https://stanford-cs242.github.io/f19/assignments/assign6/)
 
 ## Random Scribbles
-
-- [CS 242: Linear Types](https://stanford-cs242.github.io/f19/assignments/assign6/)
 
 Concurrent ML
 

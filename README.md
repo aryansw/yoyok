@@ -19,6 +19,7 @@ fn main() -> i32 {
 
 ## Documentation
 
+- References/Research: [docs/REFERENCES.md](docs/REFERENCES.md)
 - Parser: [src/parser/README.md](src/parser/README.md)
 - AST: [src/ast/ast.rs](src/ast/ast.rs)
 
