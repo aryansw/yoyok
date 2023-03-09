@@ -20,9 +20,14 @@ Just a list of references and helpful notes for this project.
  - [**Krust Formal Semantics for Rust**](https://arxiv.org/pdf/1804.10806.pdf)
  - [Oxide: The Essence of Rust](https://arxiv.org/pdf/1903.00982.pdf)
    - Sequel to: [Rust Distilled](https://arxiv.org/pdf/1806.02693.pdf)
+ - [A lightweight formalism of Lifetimes and Borrowing](https://dl.acm.org/doi/pdf/10.1145/3443420)
  - [Practical Affine Types](https://users.cs.northwestern.edu/~jesse/pubs/alms/tovpucella-alms.pdf)
  - [Linear Types can change the world](https://cs.ioc.ee/ewscs/2010/mycroft/linear-2up.pdf)
  - [Linear Typing of CPS](https://core.ac.uk/download/pdf/30696825.pdf)
+
+## Rust Verification
+ - [Static Verifier for Rust](https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/155723/eth-49222-01.pdf?sequence=1&isAllowed=y)
+ - [KRust source code](https://faculty.sist.shanghaitech.edu.cn/faculty/songfu/Projects/KRust/)
 
 ## Typing Coroutines 
   - [Typing Coroutines](https://proglang.informatik.uni-freiburg.de/projects/coroutines/TFP2010-ext.pdf)
@@ -40,6 +45,10 @@ Just a list of references and helpful notes for this project.
   - [Unifying syntax for Stackless and Stackful Coroutines](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4398.pdf)
   - [Coroutines with High Order functions](https://arxiv.org/pdf/1812.08278.pdf)
   - [Context Crate](https://docs.rs/context/latest/context/)
+    - [Coroutine-rs](https://github.com/rustcc/coroutine-rs)
+      - Lacks some important features, particularly with regards to working with complex types, perhaps this + symmetric stackful coroutines are places to look into.
+      - Coroutines are first class though, which is great.
+  - [Corosensei](https://github.com/Amanieu/corosensei)
   - [Boost Coroutines](https://www.boost.org/doc/libs/1_75_0/libs/coroutine/doc/html/index.html)
 
 ## Course Materials
