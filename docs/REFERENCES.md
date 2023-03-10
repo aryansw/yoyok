@@ -24,6 +24,7 @@ Just a list of references and helpful notes for this project.
  - [Practical Affine Types](https://users.cs.northwestern.edu/~jesse/pubs/alms/tovpucella-alms.pdf)
  - [Linear Types can change the world](https://cs.ioc.ee/ewscs/2010/mycroft/linear-2up.pdf)
  - [Linear Typing of CPS](https://core.ac.uk/download/pdf/30696825.pdf)
+ - [Linear Logic](https://homepages.inf.ed.ac.uk/wadler/topics/linear-logic.html)
 
 ## Rust Verification
  - [Static Verifier for Rust](https://www.research-collection.ethz.ch/bitstream/handle/20.500.11850/155723/eth-49222-01.pdf?sequence=1&isAllowed=y)
